@@ -1,0 +1,42 @@
+{
+  "name": "web",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@aws-amplify/ui-react": "^6.10.0",
+    "@aws-sdk/client-iot": "^3.782.0",
+    "@aws-sdk/protocol-http": "^3.374.0",
+    "@aws-sdk/signature-v4": "^3.374.0",
+    "aws-amplify": "^6.14.1",
+    "maplibre-gl": "^2.1.2",
+    "maplibre-gl-js-amplify": "^4.0.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@aws-amplify/backend": "^1.15.0",
+    "@aws-amplify/backend-cli": "^1.5.0",
+    "@types/node": "^22.15.30",
+    "@types/react": "^18.2.48",
+    "@types/react-dom": "^18.2.18",
+    "@vitejs/plugin-react": "^4.3.4",
+    "aws-cdk": "^2.1007.0",
+    "aws-cdk-lib": "^2.188.0",
+    "constructs": "^10.4.2",
+    "esbuild": "^0.25.2",
+    "eslint": "^8.56.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.5",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3",
+    "vite": "^5.0.13"
+  }
+}
