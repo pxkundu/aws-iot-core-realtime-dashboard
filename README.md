@@ -55,7 +55,7 @@ npm install
 **Deploy the Infrastructure with Amplify Gen2**
 
 ```
-npx ampx sandbox
+npx ampx sandbox --profile <AWS-PROFILE>
 ```
 
 The deployment is complete when you see the following output:
@@ -85,7 +85,7 @@ From the app's **sensor** folder:
 
 ```
 npm install
-node create-sensors.js
+node create-sensors.js --profile <AWS-PROFILE> --region <AWS-REGION>
 ```
 
 _Note - the profile and region arguments are optional. If not specified the app will create the sensors using your default AWS Profile in us-east-1_
@@ -135,13 +135,13 @@ Once you are finished working with this project, you may want to delete the reso
 From the **web** folder:
 
 ```
-npx ampx sandbox delete
+npx ampx sandbox delete  --profile <AWS-PROFILE>
 ```
 
 From the **sensor** folder:
 
 ```
-node delete-sensors.js
+node delete-sensors.js  --profile <AWS-PROFILE> --region <AWS-REGION>
 ```
 
 _Note - the profile and region arguments are optional. If not specified the app will delete the sensors using your default AWS Profile in us-east-1_

@@ -1,0 +1,28 @@
+version: 1
+applications:
+  - appRoot: web
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            - npm install
+        build:
+          commands:
+            - npm run build
+      artifacts:
+        baseDirectory: dist
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - node_modules/**/*
+    backend:
+      phases:
+        build:
+          commands:
+            - npm install
+            - npx ampx sandbox --profile admindev3
+      artifacts:
+        baseDirectory: .
+        files:
+          - amplify_outputs.json 
