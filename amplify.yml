@@ -1,0 +1,25 @@
+version: 1
+applications:
+  - frontend:
+      phases:
+        preBuild:
+          commands:
+            - cd frontend/pet-tracker
+            - npm ci
+        build:
+          commands:
+            - npm run build
+      artifacts:
+        baseDirectory: frontend/pet-tracker
+        files:
+          - '.next/**/*'
+          - 'public/**/*'
+          - 'node_modules/**/*'
+          - 'package.json'
+          - 'next.config.ts'
+          - 'postcss.config.mjs'
+          - 'tsconfig.json'
+      cache:
+        paths:
+          - frontend/pet-tracker/node_modules/**/*
+          - frontend/pet-tracker/.next/cache/**/*
