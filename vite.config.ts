@@ -50,33 +50,24 @@ export default defineConfig(({ command }) => {
 			}
 		} : {
 			build: {
-				outDir: "./lib",
+				outDir: "./dist",
 				sourcemap: false,
 				minify: true,
-				lib: {
-					entry: resolve(__dirname, "src/index.ts"),
-					formats: ["es"],
-					fileName: (format, name) => `${name}.${format}.js`
-				},
 				rollupOptions: {
-					external: [
-						"@aws-amplify/ui-react",
-						"aws-amplify",
-						"i18next",
-						"i18next-browser-languagedetector",
-						"ramda",
-						"react",
-						"react-device-detect",
-						"react-dom",
-						"react-i18next",
-						"react-router-dom",
-						"react-spring-bottom-sheet",
-						"react-toastify",
-						"react-tooltip"
-					],
 					output: {
-						assetFileNames: chunkInfo =>
-							chunkInfo.names.includes("amazon-location-features-demo-web.css") ? "style.css" : chunkInfo.names.join("-")
+						assetFileNames: (assetInfo) => {
+							const info = assetInfo.name.split('.');
+							const ext = info[info.length - 1];
+							if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(ext)) {
+								return `assets/images/[name]-[hash][extname]`;
+							}
+							if (/css/i.test(ext)) {
+								return `assets/css/[name]-[hash][extname]`;
+							}
+							return `assets/[name]-[hash][extname]`;
+						},
+						chunkFileNames: 'assets/js/[name]-[hash].js',
+						entryFileNames: 'assets/js/[name]-[hash].js',
 					}
 				}
 			}
