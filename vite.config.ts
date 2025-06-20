@@ -18,7 +18,6 @@ export default defineConfig(({ command }) => {
 				fix: true,
 				failOnError: false
 			}),
-			...(isDev ? [] : [dts({ insertTypesEntry: true })]),
 			Inspect({
 				build: false,
 				outputDir: ".vite-inspect"
