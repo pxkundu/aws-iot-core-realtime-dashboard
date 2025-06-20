@@ -1,0 +1,50 @@
+{
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "node": true,
+    "jest": true
+  },
+  "extends": [
+    "eslint:recommended"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true
+    },
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
+  "plugins": [
+    "@typescript-eslint",
+    "react",
+    "react-hooks"
+  ],
+  "rules": {
+    "react/react-in-jsx-scope": "off",
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn",
+    "@typescript-eslint/no-unused-vars": "warn",
+    "@typescript-eslint/no-explicit-any": "warn",
+    "no-undef": "off",
+    "no-mixed-spaces-and-tabs": "warn",
+    "no-inner-declarations": "warn",
+    "no-empty-pattern": "warn",
+    "no-extra-boolean-cast": "warn",
+    "no-prototype-builtins": "warn",
+    "no-useless-escape": "warn"
+  },
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  },
+  "globals": {
+    "JSX": "readonly",
+    "NodeJS": "readonly",
+    "GeoJSON": "readonly",
+    "GeolocationPositionError": "readonly",
+    "React": "readonly"
+  }
+} 
