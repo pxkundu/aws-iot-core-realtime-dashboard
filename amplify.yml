@@ -1,4 +1,13 @@
 version: 1
+backend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci --legacy-peer-deps
+    build:
+      commands:
+        - npx ampx generate
+        - npx ampx pipeline-deploy
 frontend:
   phases:
     preBuild:

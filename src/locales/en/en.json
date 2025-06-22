@@ -3916,5 +3916,14 @@
   },
   "leave_at": {
     "text": "Leave at"
+  },
+  "fm__sign_in_btn": {
+    "text": "Sign In"
+  },
+  "sign_up_modal__title": {
+    "text": "Create Account"
+  },
+  "sign_up_modal__description": {
+    "text": "Create a new account to access all features"
   }
 }

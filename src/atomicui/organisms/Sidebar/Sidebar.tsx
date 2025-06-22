@@ -24,6 +24,7 @@ export interface SidebarProps {
 	onShowAboutModal: () => void;
 	onShowUnauthSimulation: () => void;
 	onOpenFeedbackModal: () => void;
+	onOpenSignInModal: () => void;
 }
 
 const Sidebar: FC<SidebarProps> = ({
@@ -31,7 +32,8 @@ const Sidebar: FC<SidebarProps> = ({
 	onShowSettings,
 	onShowAboutModal,
 	onShowUnauthSimulation,
-	onOpenFeedbackModal
+	onOpenFeedbackModal,
+	onOpenSignInModal
 }) => {
 	const navigate = useNavigate();
 	const { t } = useTranslation();
@@ -40,6 +42,11 @@ const Sidebar: FC<SidebarProps> = ({
 	const onClickFeedbackButton = () => {
 		onCloseSidebar();
 		onOpenFeedbackModal();
+	};
+
+	const onClickSignInButton = () => {
+		onCloseSidebar();
+		onOpenSignInModal();
 	};
 
 	const onClickUnauthSimulation = () => {
@@ -98,12 +105,12 @@ const Sidebar: FC<SidebarProps> = ({
 					<Text>{t("about.text")}</Text>
 				</Flex>
 			</View>
-			<List
+			{/* <List
 				listArray={marketingMenuOptionsData}
 				className="hideScroll verticle-list side-bar__external-menu"
 				hideIcons
-			/>
-			<View className="button-wrapper">
+			/> */}
+			{/* <View className="button-wrapper">
 				<Button
 					data-testid="provide-feedback-button"
 					variation="primary"
@@ -113,6 +120,18 @@ const Sidebar: FC<SidebarProps> = ({
 					onClick={() => onClickFeedbackButton()}
 				>
 					{t("fm__provide_feedback_btn.text")}
+				</Button>
+			</View> */}
+			<View className="button-wrapper">
+				<Button
+					data-testid="sign-in-button"
+					variation="primary"
+					fontFamily="AmazonEmber-Bold"
+					textAlign="center"
+					marginTop="0.62rem"
+					onClick={() => onClickSignInButton()}
+				>
+					{t("fm__sign_in_btn.text")}
 				</Button>
 			</View>
 		</Card>

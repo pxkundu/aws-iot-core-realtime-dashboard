@@ -88,6 +88,11 @@ const FeedbackModal = lazy(() =>
 		default: module.FeedbackModal
 	}))
 );
+const SignInModal = lazy(() =>
+	import("@demo/atomicui/molecules/SignInModal").then(module => ({
+		default: module.SignInModal
+	}))
+);
 const UnauthSimulationExitModal = lazy(() =>
 	import("@demo/atomicui/molecules/ConfirmationModal").then(module => ({
 		default: module.ConfirmationModal
@@ -108,7 +113,8 @@ const initShow: ShowStateType = {
 	unauthSimulation: false,
 	unauthSimulationBounds: false,
 	unauthSimulationExitModal: false,
-	openFeedbackModal: false
+	openFeedbackModal: false,
+	openSignInModal: false
 };
 
 const DemoPage: FC = () => {
@@ -305,6 +311,27 @@ const DemoPage: FC = () => {
 
 	const handleLogoClick = () => window.open(AWS_LOCATION, "_self");
 
+	const handleSignIn = async (email: string, password: string) => {
+		// TODO: Implement actual sign-in logic with AWS Cognito
+		console.log("Sign-in attempt:", { email, password });
+		
+		// For now, simulate a successful sign-in
+		// In a real implementation, you would:
+		// 1. Call AWS Cognito authentication
+		// 2. Handle success/error responses
+		// 3. Store authentication tokens
+		// 4. Update user state
+		
+		// Simulate API call delay
+		await new Promise(resolve => setTimeout(resolve, 1000));
+		
+		// Close the modal on success
+		setShow(s => ({ ...s, openSignInModal: false }));
+		
+		// You can add success notification here
+		// For example: showToast("Successfully signed in!");
+	};
+
 	return mapStyleWithLanguageUrl ? (
 		<View
 			style={{ height: "100%" }}
@@ -354,6 +381,7 @@ const DemoPage: FC = () => {
 									onShowAboutModal={() => setShow(s => ({ ...s, about: true }))}
 									onShowUnauthSimulation={() => setShow(s => ({ ...s, unauthSimulation: true }))}
 									onOpenFeedbackModal={() => setShow(s => ({ ...s, openFeedbackModal: true }))}
+									onOpenSignInModal={() => setShow(s => ({ ...s, openSignInModal: true }))}
 								/>
 							)}
 							{show.routeBox ? (
@@ -451,6 +479,11 @@ const DemoPage: FC = () => {
 			</Map>
 			<WelcomeModal open={showWelcomeModal} onClose={() => setShowWelcomeModal(false)} />
 			<FeedbackModal open={show.openFeedbackModal} onClose={() => setShow(s => ({ ...s, openFeedbackModal: false }))} />
+			<SignInModal 
+				open={show.openSignInModal} 
+				onClose={() => setShow(s => ({ ...s, openSignInModal: false }))} 
+				onSignIn={handleSignIn}
+			/>
 			<SettingsModal
 				open={show.settings}
 				onClose={() => {

@@ -3916,5 +3916,8 @@
   },
   "leave_at": {
     "text": "Partir à"
+  },
+  "fm__sign_in_btn": {
+    "text": "Se connecter"
   }
 }

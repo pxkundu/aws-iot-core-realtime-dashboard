@@ -8,4 +8,5 @@ export type ShowStateType = {
 	unauthSimulationBounds: boolean;
 	unauthSimulationExitModal: boolean;
 	openFeedbackModal: boolean;
+	openSignInModal: boolean;
 };

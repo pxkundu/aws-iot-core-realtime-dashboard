@@ -16,3 +16,4 @@ export * from "./IconicInfoCard";
 export * from "./NotificationsBox";
 export * from "./OpenDataConfirmationModal";
 export * from "./FeedbackModal";
+export * from "./SignInModal";

@@ -1,0 +1,64 @@
+/* Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved. */
+/* SPDX-License-Identifier: MIT-0 */
+
+.sign-in-modal {
+	max-width: 30rem;
+	padding: 2.77rem;
+
+	.sign-in-content {
+		.heading {
+			color: var(--amplify-components-text-color);
+			font-family: "AmazonEmber-Bold", sans-serif;
+		}
+
+		.description {
+			color: var(--amplify-components-text-color);
+			font-family: "AmazonEmber-Regular", sans-serif;
+			line-height: 1.5;
+		}
+
+		.form-label {
+			color: var(--amplify-components-text-color);
+			font-family: "AmazonEmber-Bold", sans-serif;
+			font-size: 0.92rem;
+			margin-bottom: 0.31rem;
+		}
+
+		.sign-in-input {
+			width: 100%;
+			height: 3.08rem;
+			padding: 0.77rem;
+			border: 1px solid var(--amplify-components-field-border-color);
+			border-radius: 0.31rem;
+			font-family: "AmazonEmber-Regular", sans-serif;
+			font-size: 0.92rem;
+			background-color: var(--amplify-components-field-background-color);
+			color: var(--amplify-components-text-color);
+			transition: border-color 0.2s ease;
+
+			&:focus {
+				outline: none;
+				border-color: var(--amplify-components-primary-color);
+				box-shadow: 0 0 0 1px var(--amplify-components-primary-color);
+			}
+
+			&:disabled {
+				opacity: 0.6;
+				cursor: not-allowed;
+			}
+
+			&::placeholder {
+				color: var(--amplify-components-text-color);
+				opacity: 0.6;
+			}
+		}
+	}
+}
+
+@media screen and (max-width: 960px) {
+	.sign-in-modal {
+		width: 90% !important;
+		height: auto !important;
+		padding: 2rem;
+	}
+} 
