@@ -3,7 +3,7 @@
 
 import { FC, lazy, useState } from "react";
 
-import { Auth } from "aws-amplify";
+import { signIn, signUp } from "aws-amplify/auth";
 import { Button, Flex, Text } from "@aws-amplify/ui-react";
 import { useTranslation } from "react-i18next";
 import "./styles.scss";
@@ -41,18 +41,20 @@ const SignInModal: FC<SignInModalProps> = ({ open, onClose, onSignIn }) => {
 		try {
 			if (isSignUp) {
 				// Sign up with Cognito
-				await Auth.signUp({
+				await signUp({
 					username: email,
 					password: password,
-					attributes: {
-						email: email,
+					options: {
+						userAttributes: {
+							email: email,
+						},
 					},
 				});
 				setSuccess("Account created successfully! Please check your email for verification.");
 				setIsSignUp(false);
 			} else {
 				// Sign in with Cognito
-				await Auth.signIn(email, password);
+				await signIn({ username: email, password: password });
 				await onSignIn(email, password);
 				onClose();
 			}

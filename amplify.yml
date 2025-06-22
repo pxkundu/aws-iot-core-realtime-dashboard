@@ -6,7 +6,7 @@ backend:
         - npm ci --legacy-peer-deps
     build:
       commands:
-        - npx ampx generate
+        - npx ampx generate outputs
         - npx ampx pipeline-deploy
 frontend:
   phases:
