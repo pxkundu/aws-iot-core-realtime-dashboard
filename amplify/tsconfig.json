@@ -10,7 +10,9 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true
+    "noEmit": true,
+    "lib": ["ES2022"],
+    "typeRoots": ["node_modules/@types"]
   },
   "include": [
     "**/*.ts"

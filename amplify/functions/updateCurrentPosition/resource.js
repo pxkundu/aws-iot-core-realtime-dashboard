@@ -1,7 +1,7 @@
 import { defineFunction } from '@aws-amplify/backend';
-export const createTracker = defineFunction({
+export const updateCurrentPosition = defineFunction({
     entry: './handler.ts',
-    name: 'createTracker',
+    name: 'updateCurrentPosition',
     timeoutSeconds: 30,
     memoryMB: 256,
     resourceGroupName: 'geo',
@@ -9,3 +9,4 @@ export const createTracker = defineFunction({
         NODE_OPTIONS: '--enable-source-maps'
     }
 });
+//# sourceMappingURL=resource.js.map

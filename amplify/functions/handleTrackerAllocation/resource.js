@@ -1,11 +1,12 @@
 import { defineFunction } from '@aws-amplify/backend';
-export const postConfirmation = defineFunction({
+export const handleTrackerAllocation = defineFunction({
     entry: './handler.ts',
-    name: 'postConfirmation',
+    name: 'handleTrackerAllocation',
     timeoutSeconds: 30,
     memoryMB: 256,
-    resourceGroupName: 'postConfirmation',
+    resourceGroupName: 'data',
     environment: {
         NODE_OPTIONS: '--enable-source-maps'
     }
 });
+//# sourceMappingURL=resource.js.map

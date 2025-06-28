@@ -9,3 +9,4 @@ export const createTracker = defineFunction({
         NODE_OPTIONS: '--enable-source-maps'
     }
 });
+//# sourceMappingURL=resource.js.map

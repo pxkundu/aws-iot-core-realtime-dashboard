@@ -1,11 +1,12 @@
 import { defineFunction } from '@aws-amplify/backend';
-export const updateCurrentPosition = defineFunction({
+export const postConfirmation = defineFunction({
     entry: './handler.ts',
-    name: 'updateCurrentPosition',
+    name: 'postConfirmation',
     timeoutSeconds: 30,
     memoryMB: 256,
-    resourceGroupName: 'geo',
+    resourceGroupName: 'postConfirmation',
     environment: {
         NODE_OPTIONS: '--enable-source-maps'
     }
 });
+//# sourceMappingURL=resource.js.map

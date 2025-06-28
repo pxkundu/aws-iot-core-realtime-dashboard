@@ -11,3 +11,4 @@ export const sendNotification = defineFunction({
         SENDER_EMAIL_ADDRESS: 'inboxkundu@gmail.com',
     },
 });
+//# sourceMappingURL=resource.js.map
