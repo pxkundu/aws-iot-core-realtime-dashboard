@@ -1,17 +1,8 @@
 import { defineFunction } from '@aws-amplify/backend';
 
-// Global type declarations for Node.js environment
-declare global {
-    namespace NodeJS {
-        interface ProcessEnv {
-            BRANCH_NAME?: string;
-        }
-    }
-}
-
 export const createTracker = defineFunction({
   entry: './handler.ts',
-  name: `createTracker-${process.env.BRANCH_NAME || 'sandbox'}`,
+  name: 'createTracker',
   timeoutSeconds: 30,
   memoryMB: 256,
   resourceGroupName: 'geo',
