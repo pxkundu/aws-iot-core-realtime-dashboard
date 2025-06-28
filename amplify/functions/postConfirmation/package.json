@@ -11,13 +11,13 @@
     "prepare": "npm run build"
   },
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.734.0",
-    "@aws-sdk/lib-dynamodb": "^3.734.0",
-    "@aws-sdk/client-cognito-identity-provider": "^3.734.0"
+    "@aws-sdk/client-cognito-identity-provider": "^3.839.0",
+    "@aws-sdk/client-dynamodb": "^3.839.0",
+    "@aws-sdk/lib-dynamodb": "^3.839.0"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
     "@types/jest": "^29.0.0",
+    "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "eslint": "^8.0.0",
@@ -25,4 +25,4 @@
     "ts-jest": "^29.0.0",
     "typescript": "^5.8.0"
   }
-} 
+}
