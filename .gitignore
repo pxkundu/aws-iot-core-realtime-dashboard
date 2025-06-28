@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+amplify/node_modules
 /.pnp
 .pnp.*
 .yarn/*
