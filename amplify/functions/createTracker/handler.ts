@@ -1,3 +1,17 @@
+import { LocationClient, CreateGeofenceCollectionCommand, CreateTrackerCommand } from "@aws-sdk/client-location";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
+
+// Global type declarations for Node.js environment
+declare global {
+    namespace NodeJS {
+        interface ProcessEnv {
+            AWS_REGION: string;
+            TRACKER_DATA_TABLE_NAME: string;
+        }
+    }
+}
+
 interface IoTEvent {
     deviceId: string;
     latitude?: number;
@@ -10,10 +24,6 @@ interface TrackerData {
     timestamp: string;
     geofenceCollectionId: string;
 }
-
-import { LocationClient, CreateGeofenceCollectionCommand, CreateTrackerCommand } from "@aws-sdk/client-location";
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
 
 // Environment validation
 const validateEnvironment = () => {

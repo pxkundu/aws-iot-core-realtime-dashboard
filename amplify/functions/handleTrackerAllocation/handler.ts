@@ -2,6 +2,16 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, UpdateCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
 import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
 
+// Global type declarations for Node.js environment
+declare global {
+    namespace NodeJS {
+        interface ProcessEnv {
+            USER_DATA_TABLE_NAME: string;
+            SEND_NOTIFICATION_FUNCTION_NAME: string;
+        }
+    }
+}
+
 // Type definitions
 interface AllocationEvent {
     requestContext?: {

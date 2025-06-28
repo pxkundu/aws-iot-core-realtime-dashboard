@@ -1,5 +1,14 @@
 import { defineFunction } from '@aws-amplify/backend';
 
+// Global type declarations for Node.js environment
+declare global {
+    namespace NodeJS {
+        interface ProcessEnv {
+            BRANCH_NAME?: string;
+        }
+    }
+}
+
 export const updateCurrentPosition = defineFunction({
   entry: './handler.ts',
   name: `updateCurrentPosition-${process.env.BRANCH_NAME || 'sandbox'}`,

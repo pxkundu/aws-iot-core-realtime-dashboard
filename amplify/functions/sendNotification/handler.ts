@@ -1,5 +1,16 @@
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 
+// Global type declarations for Node.js environment
+declare global {
+    namespace NodeJS {
+        interface ProcessEnv {
+            AWS_REGION: string;
+            SENDER_EMAIL_ADDRESS: string;
+            ADMIN_EMAIL_ADDRESS?: string;
+        }
+    }
+}
+
 // Type definitions
 interface GeofenceEvent {
     'detail-type': 'Location Geofence Event';
