@@ -17,11 +17,11 @@ import {
   RestApi,
 } from "aws-cdk-lib/aws-apigateway";
 
-import { createTracker } from './functions/createTracker/resource';
-import { updateCurrentPosition } from './functions/updateCurrentPosition/resource';
-import { sendNotification } from './functions/sendNotification/resource';
-import { handleTrackerAllocation } from './functions/handleTrackerAllocation/resource';
-import { postConfirmation } from './functions/postConfirmation/resource';
+import { createTracker } from './functions/createTracker/resource.js';
+import { updateCurrentPosition } from './functions/updateCurrentPosition/resource.js';
+import { sendNotification } from './functions/sendNotification/resource.js';
+import { handleTrackerAllocation } from './functions/handleTrackerAllocation/resource.js';
+import { postConfirmation } from './functions/postConfirmation/resource.js';
 import { getEnvironmentConfig } from './env';
 
 // Get environment configuration
