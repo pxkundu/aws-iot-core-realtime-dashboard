@@ -3,14 +3,13 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 
 // Global type declarations for Node.js environment
-declare global {
-    namespace NodeJS {
-        interface ProcessEnv {
-            AWS_REGION: string;
-            TRACKER_DATA_TABLE_NAME: string;
-        }
-    }
-}
+declare const process: {
+    env: {
+        AWS_REGION: string;
+        TRACKER_DATA_TABLE_NAME: string;
+        [key: string]: string | undefined;
+    };
+};
 
 // Type definitions
 interface IoTEvent {

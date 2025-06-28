@@ -3,13 +3,12 @@ import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
 import { CognitoIdentityProviderClient, AdminAddUserToGroupCommand } from "@aws-sdk/client-cognito-identity-provider";
 
 // Global type declarations for Node.js environment
-declare global {
-    namespace NodeJS {
-        interface ProcessEnv {
-            USER_DATA_TABLE_NAME: string;
-        }
-    }
-}
+declare const process: {
+    env: {
+        USER_DATA_TABLE_NAME: string;
+        [key: string]: string | undefined;
+    };
+};
 
 // Type definitions
 interface PostConfirmationEvent {
