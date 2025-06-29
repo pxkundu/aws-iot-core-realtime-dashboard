@@ -1,14 +1,18 @@
 {
   "name": "aws-iot-core-realtime-dashboard",
   "version": "1.0.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
   "scripts": {
     "dev": "npm run dev --prefix frontend",
     "build": "npm run build --prefix frontend",
     "deploy": "npx ampx sandbox"
   },
   "devDependencies": {
-    "@aws-amplify/backend": "latest",
-    "@aws-amplify/backend-cli": "latest"
+    "@aws-amplify/backend": "^1.16.1",
+    "@aws-amplify/backend-cli": "^1.8.0"
   },
   "dependencies": {
     "@aws-sdk/client-location": "^3.734.0",

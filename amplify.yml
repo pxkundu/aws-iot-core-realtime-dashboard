@@ -1,15 +1,28 @@
 version: 1
 backend:
   phases:
+    preBuild:
+      commands:
+        # Use Node.js version from .nvmrc
+        - nvm use || nvm install
+        - node --version
+        - npm --version
+        # Clear npm cache to avoid issues
+        - npm cache clean --force
     build:
       commands:
-        - npm ci --cache .npm --prefer-offline
+        # Install with optional dependencies for platform-specific binaries
+        - npm ci --include=optional --cache .npm --prefer-offline
+        # Verify @parcel/watcher installation
+        - npm ls @parcel/watcher || npm install @parcel/watcher --force
         - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
 frontend:
   phases:
     preBuild:
       commands:
-        - npm ci --legacy-peer-deps
+        # Use Node.js version from .nvmrc
+        - nvm use || nvm install
+        - npm ci --legacy-peer-deps --include=optional
     build:
       commands:
         - npm run build
@@ -20,3 +33,4 @@ frontend:
   cache:
     paths:
       - node_modules/**/*
+      - .npm/**/*
