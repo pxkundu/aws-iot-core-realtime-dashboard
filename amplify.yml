@@ -3,8 +3,8 @@ backend:
   phases:
     preBuild:
       commands:
-        # Use Node.js version from .nvmrc for consistency
-        - nvm use || nvm install
+        # Use Node.js version from .nvmrc with fallback
+        - nvm use || nvm install 20.10.0 || echo "Using system Node.js"
         - node --version
         - npm --version
         # Verify we're in the correct directory
@@ -26,8 +26,8 @@ frontend:
   phases:
     preBuild:
       commands:
-        # Use Node.js version from .nvmrc for consistency
-        - nvm use || nvm install
+        # Use Node.js version from .nvmrc with fallback
+        - nvm use || nvm install 20.10.0 || echo "Using system Node.js"
         - node --version
         - npm --version
         # Install frontend dependencies (when frontend exists)

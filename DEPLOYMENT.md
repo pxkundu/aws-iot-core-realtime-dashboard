@@ -30,7 +30,7 @@ aws-iot-core-realtime-dashboard/
 │   └── tsconfig.json           # TypeScript config
 ├── amplify.yml                  # Optimized deployment config
 ├── package.json                 # Root project config
-├── .nvmrc                      # Node.js v20
+├── .nvmrc                      # Node.js v20.10.0 (fixed)
 └── README.md                   # Original documentation
 ```
 
@@ -76,7 +76,7 @@ npx ampx pipeline-deploy --branch main --app-id YOUR_APP_ID
 backend:
   phases:
     preBuild:
-      - nvm use || nvm install    # Use Node.js from .nvmrc
+      - nvm use || nvm install 20.10.0 || echo "Using system Node.js"
       - npm --version             # Verify versions
     build:
       - npm ci --no-audit         # Install clean dependencies
@@ -107,6 +107,23 @@ frontend:
 - Cognito Identity Pool
 - IAM roles (authenticated/unauthenticated)
 - Amplify configuration outputs
+
+## 🔧 Recent Fixes
+
+### Node.js Version Issue (Fixed)
+**Problem**: Build was failing with:
+```
+Version '20 ' not found - try `nvm ls-remote` to browse available versions.
+```
+
+**Root Cause**: `.nvmrc` file had trailing spaces causing nvm to look for invalid version.
+
+**Solution**: 
+1. ✅ Fixed `.nvmrc` to contain exactly `20.10.0` with no trailing spaces
+2. ✅ Enhanced `amplify.yml` with fallback commands:
+   ```yaml
+   - nvm use || nvm install 20.10.0 || echo "Using system Node.js"
+   ```
 
 ## 🎯 Next Steps
 
@@ -188,6 +205,37 @@ await signOut();
    npx ampx --version
    ```
 
+5. **NVM Version Issues** 
+   ```bash
+   # Check .nvmrc content (should be exactly "20.10.0")
+   cat .nvmrc
+   
+   # If there are trailing spaces, fix with:
+   echo -n "20.10.0" > .nvmrc
+   ```
+
+### Build Environment Issues
+
+#### Expected Build Flow:
+```
+✅ Clone repository
+✅ nvm use || nvm install 20.10.0  # Robust Node.js setup
+✅ npm ci --prefer-offline --no-audit  # Fast dependency install
+✅ cd amplify && npx tsc --noEmit  # TypeScript validation
+✅ npx ampx pipeline-deploy  # Deploy auth backend
+```
+
+#### Common Build Errors and Solutions:
+
+**Error**: `Version 'X' not found`
+**Solution**: Check `.nvmrc` has exact version with no spaces
+
+**Error**: `npm ci failed`
+**Solution**: Ensure `package-lock.json` is committed and up to date
+
+**Error**: `TypeScript compilation failed`
+**Solution**: Run `cd amplify && npx tsc --noEmit` locally first
+
 ## 📚 Resources
 
 - [Amplify Gen 2 Documentation](https://docs.amplify.aws/gen2/)
@@ -204,4 +252,5 @@ When adding new components:
 
 ---
 
-**Status**: ✅ Ready for deployment with simplified auth-only backend 
+**Status**: ✅ Ready for deployment with simplified auth-only backend  
+**Last Updated**: July 2025 - Fixed Node.js version issues 
