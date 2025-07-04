@@ -1,41 +1,21 @@
 version: 1
 backend:
   phases:
-    preBuild:
-      commands:
-        # Use Node.js version from .nvmrc with fallback
-        - nvm use || nvm install 20.10.0 || echo "Using system Node.js"
-        - node --version
-        - npm --version
-        # Verify we're in the correct directory
-        - pwd
     build:
       commands:
-        # Install dependencies for simplified auth-only backend
-        - npm ci --prefer-offline --no-audit
-        # Verify backend configuration before deployment
-        - cd amplify && npx tsc --noEmit
-        # Deploy Amplify Gen 2 backend
+        - npm ci
         - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
   cache:
     paths:
       - node_modules/**/*
-      - amplify/node_modules/**/*
-      - .npm/**/*
 frontend:
   phases:
     preBuild:
       commands:
-        # Use Node.js version from .nvmrc with fallback
-        - nvm use || nvm install 20.10.0 || echo "Using system Node.js"
-        - node --version
-        - npm --version
-        # Install frontend dependencies (when frontend exists)
-        - test -f package.json && npm ci --legacy-peer-deps --no-audit || echo "No frontend package.json found"
+        - npm ci
     build:
       commands:
-        # Build frontend (when frontend exists)
-        - test -f package.json && npm run build || echo "No frontend build script found"
+        - npm run build
   artifacts:
     baseDirectory: dist
     files:
@@ -43,4 +23,3 @@ frontend:
   cache:
     paths:
       - node_modules/**/*
-      - .npm/**/*

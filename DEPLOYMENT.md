@@ -28,9 +28,9 @@ aws-iot-core-realtime-dashboard/
 │   ├── backend.ts               # Simplified auth-only backend
 │   ├── package.json             # Clean dependencies
 │   └── tsconfig.json           # TypeScript config
-├── amplify.yml                  # Optimized deployment config
+├── amplify.yml                  # Simple deployment config
 ├── package.json                 # Root project config
-├── .nvmrc                      # Node.js v20.10.0 (fixed)
+├── .nvmrc                      # Node.js v20.10.0 (for local dev)
 └── README.md                   # Original documentation
 ```
 
@@ -38,7 +38,7 @@ aws-iot-core-realtime-dashboard/
 
 ### 1. Prerequisites
 ```bash
-# Node.js 20+ (uses .nvmrc)
+# Node.js 20+ (for local development)
 nvm use
 
 # AWS CLI configured
@@ -71,28 +71,66 @@ npx ampx pipeline-deploy --branch main --app-id YOUR_APP_ID
 
 ## 🔧 Amplify.yml Configuration
 
-### Backend Phase
+Following **official Amplify Gen 2 documentation**, our `amplify.yml` is clean and simple:
+
+```yaml
+version: 1
+backend:
+  phases:
+    build:
+      commands:
+        - npm ci                              # Install dependencies
+        - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
+  cache:
+    paths:
+      - node_modules/**/*
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci                              # Install dependencies
+    build:
+      commands:
+        - npm run build                       # Build frontend
+  artifacts:
+    baseDirectory: dist
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
+```
+
+### Why No NVM Commands?
+
+**AWS Amplify build environments come with Node.js pre-installed**, so nvm commands are unnecessary:
+
+✅ **Best Practice** (Current):
+```yaml
+backend:
+  phases:
+    build:
+      commands:
+        - npm ci
+        - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
+```
+
+❌ **Overengineered** (Previous):
 ```yaml
 backend:
   phases:
     preBuild:
-      - nvm use || nvm install 20.10.0 || echo "Using system Node.js"
-      - npm --version             # Verify versions
-    build:
-      - npm ci --no-audit         # Install clean dependencies
-      - cd amplify && npx tsc --noEmit  # Validate TypeScript
-      - npx ampx pipeline-deploy   # Deploy auth backend
+      commands:
+        - nvm use || nvm install 20.10.0 || echo "Using system Node.js"
+        - node --version
+        - npm --version
 ```
 
-### Frontend Phase (Future-Ready)
-```yaml
-frontend:
-  phases:
-    preBuild:
-      - test -f package.json && npm ci || echo "No frontend found"
-    build:
-      - test -f package.json && npm run build || echo "No build script"
-```
+### .nvmrc Purpose
+
+The `.nvmrc` file is **only for local development consistency**:
+- **Local Development**: `nvm use` ensures all developers use the same Node.js version
+- **Amplify Deployment**: AWS handles Node.js version automatically
 
 ## 📋 Authentication Features
 
@@ -120,10 +158,8 @@ Version '20 ' not found - try `nvm ls-remote` to browse available versions.
 
 **Solution**: 
 1. ✅ Fixed `.nvmrc` to contain exactly `20.10.0` with no trailing spaces
-2. ✅ Enhanced `amplify.yml` with fallback commands:
-   ```yaml
-   - nvm use || nvm install 20.10.0 || echo "Using system Node.js"
-   ```
+2. ✅ **Simplified `amplify.yml`** following official Amplify Gen 2 documentation
+3. ✅ Removed unnecessary nvm commands from deployment
 
 ## 🎯 Next Steps
 
@@ -176,7 +212,7 @@ await signOut();
 
 ### Common Issues
 
-1. **Node.js Version Mismatch**
+1. **Node.js Version Mismatch (Local Development)**
    ```bash
    # Use exact version from .nvmrc
    nvm use
@@ -205,7 +241,7 @@ await signOut();
    npx ampx --version
    ```
 
-5. **NVM Version Issues** 
+5. **NVM Version Issues (Local Development Only)** 
    ```bash
    # Check .nvmrc content (should be exactly "20.10.0")
    cat .nvmrc
@@ -216,30 +252,29 @@ await signOut();
 
 ### Build Environment Issues
 
-#### Expected Build Flow:
+#### Expected Build Flow (Simplified):
 ```
 ✅ Clone repository
-✅ nvm use || nvm install 20.10.0  # Robust Node.js setup
-✅ npm ci --prefer-offline --no-audit  # Fast dependency install
-✅ cd amplify && npx tsc --noEmit  # TypeScript validation
-✅ npx ampx pipeline-deploy  # Deploy auth backend
+✅ npm ci                        # AWS handles Node.js version
+✅ npx ampx pipeline-deploy      # Deploy auth backend
 ```
 
 #### Common Build Errors and Solutions:
 
-**Error**: `Version 'X' not found`
-**Solution**: Check `.nvmrc` has exact version with no spaces
-
 **Error**: `npm ci failed`
 **Solution**: Ensure `package-lock.json` is committed and up to date
 
-**Error**: `TypeScript compilation failed`
-**Solution**: Run `cd amplify && npx tsc --noEmit` locally first
+**Error**: `pipeline-deploy failed`
+**Solution**: Check AWS credentials and service role permissions
+
+**Error**: `Module not found`
+**Solution**: Verify all required dependencies are in `package.json`
 
 ## 📚 Resources
 
 - [Amplify Gen 2 Documentation](https://docs.amplify.aws/gen2/)
 - [Amplify Auth Guide](https://docs.amplify.aws/gen2/build-a-backend/auth/)
+- [Official amplify.yml Examples](https://docs.aws.amazon.com/amplify/latest/userguide/yml-specification-syntax.html)
 - [AWS Cognito Documentation](https://docs.aws.amazon.com/cognito/)
 
 ## 🤝 Contributing
@@ -248,9 +283,9 @@ When adding new components:
 1. Keep the auth-only foundation intact
 2. Add components incrementally
 3. Update this deployment guide
-4. Test deployment with `amplify.yml`
+4. Follow official Amplify Gen 2 patterns
 
 ---
 
 **Status**: ✅ Ready for deployment with simplified auth-only backend  
-**Last Updated**: July 2025 - Fixed Node.js version issues 
+**Last Updated**: July 2025 - Simplified following official Amplify Gen 2 documentation 
