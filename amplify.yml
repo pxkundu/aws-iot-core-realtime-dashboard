@@ -1,9 +1,19 @@
 version: 1
+backend:
+  phases:
+    build:
+      commands:
+        - npm ci --legacy-peer-deps
+        - npm run amplify:build
+  cache:
+    paths:
+      - node_modules/**/*
+      - amplify/node_modules/**/*
 frontend:
   phases:
     preBuild:
       commands:
-        - npm ci --legacy-peer-deps
+        - npm ci
     build:
       commands:
         - npm run build
@@ -13,4 +23,4 @@ frontend:
       - '**/*'
   cache:
     paths:
-      - node_modules/**/* 
+      - node_modules/**/*

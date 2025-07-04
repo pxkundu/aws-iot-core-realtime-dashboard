@@ -1,25 +1,38 @@
 import { Amplify } from 'aws-amplify';
 
-// Configuration for Amplify with Cognito authentication
-const amplifyConfig = {
+// Default configuration that will be overridden by outputs
+let amplifyConfig: any = {
   Auth: {
     Cognito: {
-      userPoolId: import.meta.env.VITE_USER_POOL_ID || 'your-user-pool-id',
-      userPoolClientId: import.meta.env.VITE_USER_POOL_CLIENT_ID || 'your-user-pool-client-id',
-      identityPoolId: import.meta.env.VITE_IDENTITY_POOL_ID || 'your-identity-pool-id',
+      userPoolId: 'your-user-pool-id',
+      userPoolClientId: 'your-user-pool-client-id',
+      identityPoolId: 'your-identity-pool-id',
     },
   },
-  // Geo configuration is handled separately in the app
-  // API: {
-  //   Geo: {
-  //     endpoint: import.meta.env.VITE_AWS_GEO_ENDPOINT,
-  //     region: import.meta.env.VITE_AWS_REGION || 'eu-west-1',
-  //   },
-  // },
-} as const;
+};
 
-export const configureAmplify = () => {
-  Amplify.configure(amplifyConfig as any);
+// Function to configure Amplify with backend outputs
+export const configureAmplify = async () => {
+  try {
+    // Try to import generated outputs
+    const outputs = await import('../amplify_outputs.json');
+    amplifyConfig = outputs.default;
+    console.log('Using Amplify backend outputs');
+  } catch (error) {
+    // Fallback to environment variables if outputs file doesn't exist
+    console.warn('amplify_outputs.json not found, using environment variables');
+    amplifyConfig = {
+      Auth: {
+        Cognito: {
+          userPoolId: (import.meta as any).env?.VITE_USER_POOL_ID || 'your-user-pool-id',
+          userPoolClientId: (import.meta as any).env?.VITE_USER_POOL_CLIENT_ID || 'your-user-pool-client-id',
+          identityPoolId: (import.meta as any).env?.VITE_IDENTITY_POOL_ID || 'your-identity-pool-id',
+        },
+      },
+    };
+  }
+  
+  Amplify.configure(amplifyConfig);
 };
 
 export default amplifyConfig; 
