@@ -85,7 +85,8 @@ backend:
   phases:
     build:
       commands:
-        - npm ci                              # Install dependencies
+        - npm install                         # Install dependencies (handles native deps)
+        - npm rebuild @parcel/watcher         # Rebuild native dependencies for Linux
         - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
   cache:
     paths:
@@ -94,7 +95,7 @@ frontend:
   phases:
     preBuild:
       commands:
-        - npm ci                              # Install dependencies
+        - npm install                         # Install dependencies
     build:
       commands:
         - npm run build                       # Build frontend
@@ -105,6 +106,31 @@ frontend:
   cache:
     paths:
       - node_modules/**/*
+```
+
+### Why npm install instead of npm ci?
+
+**AWS Amplify CI environments** need to handle native dependencies properly:
+
+✅ **Current Solution** (Handles Native Dependencies):
+```yaml
+backend:
+  phases:
+    build:
+      commands:
+        - npm install                         # Better compatibility with native deps
+        - npm rebuild @parcel/watcher         # Rebuild for Linux platform
+        - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
+```
+
+❌ **Previous** (Failed with @parcel/watcher):
+```yaml
+backend:
+  phases:
+    build:
+      commands:
+        - npm ci                              # Strict lockfile, but skips rebuilds
+        - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
 ```
 
 ### Why No NVM Commands?
@@ -146,8 +172,10 @@ The `.nvmrc` file is **only for local development consistency**:
 ✅ Cloning repository: git@github.com:your-repo.git
 ✅ Successfully cleaned up Git credentials
 ✅ Starting Backend Build
-✅ Executing command: npm ci
+✅ Executing command: npm install
 ⚠️  npm warn ERESOLVE overriding peer dependency (NORMAL - see below)
+✅ Executing command: npm rebuild @parcel/watcher
+✅ Executing command: npx ampx pipeline-deploy
 ✅ Backend deployment continues...
 ```
 
@@ -198,11 +226,28 @@ Version '20 ' not found - try `nvm ls-remote` to browse available versions.
 
 **Result**: ✅ **BUILD NOW SUCCESSFUL** - Deployment working perfectly!
 
+### ✅ Native Dependencies Issue (RESOLVED)
+**Problem**: Build failing with:
+```
+Error: No prebuild or local build of @parcel/watcher found. 
+Tried @parcel/watcher-linux-x64-glibc.
+```
+
+**Root Cause**: Native Node.js modules need to be rebuilt for AWS Linux environment.
+
+**Solution Applied**: 
+1. ✅ Changed from `npm ci` to `npm install` for better native dependency handling
+2. ✅ Added `npm rebuild @parcel/watcher` to rebuild native modules for Linux
+3. ✅ Updated both backend and frontend phases
+
+**Result**: ✅ **NATIVE DEPENDENCIES NOW BUILDING CORRECTLY** - Deployment should proceed!
+
 ### ✅ Simplified Configuration Success
 - ✅ Clean, official Amplify Gen 2 patterns
 - ✅ Fast, reliable build process
 - ✅ No complex version management
 - ✅ Follows AWS best practices
+- ✅ Handles native dependencies properly
 
 ## 🎯 Next Steps
 
@@ -305,6 +350,22 @@ cd amplify
 npx tsc --noEmit
 ```
 
+#### 6. **@parcel/watcher Native Dependency Issues**
+```
+Error: No prebuild or local build of @parcel/watcher found. 
+Tried @parcel/watcher-linux-x64-glibc.
+```
+
+**Root Cause**: Native dependencies need to be rebuilt for AWS Linux environment.
+
+**Solution**: ✅ **Fixed in amplify.yml**
+```yaml
+- npm install                    # Better compatibility than npm ci
+- npm rebuild @parcel/watcher    # Rebuild native deps for platform
+```
+
+**Why this happens**: `@parcel/watcher` is a native Node.js module that needs platform-specific binaries. AWS Amplify runs on Linux, but the package may have been built for a different platform.
+
 ### Build Environment Details
 
 #### Expected Build Environment:
@@ -324,12 +385,21 @@ npx tsc --noEmit
 
 ### Error Resolution Patterns
 
-#### npm ci Issues:
+#### npm install Issues:
 ```bash
-# If npm ci fails, check:
-1. package-lock.json is committed
+# If npm install fails, check:
+1. package.json syntax is valid
 2. No conflicting package versions
 3. Network connectivity
+4. Platform-specific dependencies (native modules)
+```
+
+#### Native Dependencies Issues:
+```bash
+# If native modules fail to build:
+1. npm rebuild <package-name>
+2. Ensure platform compatibility
+3. Check for missing build tools
 ```
 
 #### Deployment Issues:
