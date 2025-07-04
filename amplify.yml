@@ -3,7 +3,8 @@ backend:
   phases:
     build:
       commands:
-        - npm ci --legacy-peer-deps
+        - nvm use 20
+        - npm install --legacy-peer-deps
         - npm run amplify:build
   cache:
     paths:
@@ -13,7 +14,8 @@ frontend:
   phases:
     preBuild:
       commands:
-        - npm ci
+        - nvm use 20
+        - npm install --legacy-peer-deps
     build:
       commands:
         - npm run build

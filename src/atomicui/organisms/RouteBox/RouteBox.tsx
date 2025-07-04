@@ -326,7 +326,7 @@ const RouteBox: FC<RouteBoxProps> = ({
 			travelModes.map(async mode => {
 				const params = handleParams(mode);
 
-				if (!!params) {
+				if (params) {
 					const rd = await getRoute(params, TriggeredByEnum.ROUTE_MODULE);
 					rd && setRouteDataForMobile(preVal => (preVal ? [...preVal, { [mode]: rd }] : [{ [mode]: rd }]));
 				}
@@ -337,7 +337,7 @@ const RouteBox: FC<RouteBoxProps> = ({
 	const calculateRouteData = useCallback(async () => {
 		const params = handleParams(travelMode);
 
-		if (!!params) {
+		if (params) {
 			const rd = await getRoute(params, TriggeredByEnum.ROUTE_MODULE);
 			rd && setRouteData({ ...rd, travelMode: travelMode });
 			!isDesktop && !routeDataForMobile && calculateRouteDataForAllTravelModes();
@@ -452,7 +452,7 @@ const RouteBox: FC<RouteBoxProps> = ({
 				return;
 			}
 
-			if (!!isBothInputFilled) {
+			if (isBothInputFilled) {
 				setInputFocused(preVal => ({ ...preVal, from: false, to: false }));
 			}
 		},
@@ -838,7 +838,7 @@ const RouteBox: FC<RouteBoxProps> = ({
 	const renderSuggestions = (suggestions: SuggestionType[], type: InputType) =>
 		suggestions.map(s => {
 			const string = s.label || "";
-			const separateIndex = !!s.placeId ? string?.indexOf(",") : -1;
+			const separateIndex = s.placeId ? string?.indexOf(",") : -1;
 			const title = separateIndex > -1 ? string?.substring(0, separateIndex) : string;
 			const address = separateIndex > 1 ? string?.substring(separateIndex + 1) : null;
 
@@ -1370,14 +1370,14 @@ const RouteBox: FC<RouteBoxProps> = ({
 									<Text>{t("route_box__current_location.text")}</Text>
 								</View>
 							)}
-						{!!suggestions.from?.length
+						{suggestions.from?.length
 							? renderSuggestions(suggestions.from, InputType.FROM)
 							: isSearching &&
 							  value.from?.length > 2 &&
 							  value.from !== t("route_box__my_location.text") &&
 							  !placeData.from &&
 							  inputFocused.from && <NotFoundCard />}
-						{!!suggestions.to?.length
+						{suggestions.to?.length
 							? renderSuggestions(suggestions.to, InputType.TO)
 							: isSearching &&
 							  value.to?.length > 2 &&
