@@ -29,6 +29,7 @@
 		"ci-test": "CI=true react-scripts test",
 		"coverage": "react-scripts test --coverage --watchAll",
 		"prepare": "husky install",
+		"postinstall": "npm rebuild --silent || true",
 		"stylelint-check": "stylelint-config-prettier-check",
 		"translate-content": "cd extra/translation-script-content && npm install && node index.js && cd ../../",
 		"translate-content-update": "cd extra/translation-script-content && npm install && node update-translation.js && cd ../../",
