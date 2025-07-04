@@ -85,8 +85,7 @@ backend:
   phases:
     build:
       commands:
-        - npm install                         # Install dependencies (handles native deps)
-        - npm rebuild @parcel/watcher         # Rebuild native dependencies for Linux
+        - npm ci --no-optional               # Skip optional deps that cause platform issues
         - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
   cache:
     paths:
@@ -95,7 +94,7 @@ frontend:
   phases:
     preBuild:
       commands:
-        - npm install                         # Install dependencies
+        - npm ci --no-optional               # Skip optional deps
     build:
       commands:
         - npm run build                       # Build frontend
@@ -108,61 +107,32 @@ frontend:
       - node_modules/**/*
 ```
 
-### Why npm install instead of npm ci?
+### Why --no-optional flag?
 
-**AWS Amplify CI environments** need to handle native dependencies properly:
+**Smart solution for native dependency issues** without complicating the build:
 
-✅ **Current Solution** (Handles Native Dependencies):
+✅ **Current Solution** (Clean & Smart):
 ```yaml
 backend:
   phases:
     build:
       commands:
-        - npm install                         # Better compatibility with native deps
-        - npm rebuild @parcel/watcher         # Rebuild for Linux platform
+        - npm ci --no-optional               # Skips problematic optional dependencies
         - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
 ```
 
-❌ **Previous** (Failed with @parcel/watcher):
+❌ **Alternative** (More Complex):
 ```yaml
 backend:
   phases:
     build:
       commands:
-        - npm ci                              # Strict lockfile, but skips rebuilds
+        - npm install                         # Less predictable
+        - npm rebuild @parcel/watcher         # Manual rebuilding
         - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
 ```
 
-### Why No NVM Commands?
-
-**AWS Amplify build environments come with Node.js pre-installed**, so nvm commands are unnecessary:
-
-✅ **Best Practice** (Current):
-```yaml
-backend:
-  phases:
-    build:
-      commands:
-        - npm ci
-        - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
-```
-
-❌ **Overengineered** (Previous):
-```yaml
-backend:
-  phases:
-    preBuild:
-      commands:
-        - nvm use || nvm install 20.10.0 || echo "Using system Node.js"
-        - node --version
-        - npm --version
-```
-
-### .nvmrc Purpose
-
-The `.nvmrc` file is **only for local development consistency**:
-- **Local Development**: `nvm use` ensures all developers use the same Node.js version
-- **Amplify Deployment**: AWS handles Node.js version automatically
+**Why this works**: The `--no-optional` flag tells npm to skip optional dependencies like `@parcel/watcher` that often cause platform compatibility issues in CI environments, while keeping all required dependencies.
 
 ## 📋 Understanding Build Logs
 
@@ -172,9 +142,8 @@ The `.nvmrc` file is **only for local development consistency**:
 ✅ Cloning repository: git@github.com:your-repo.git
 ✅ Successfully cleaned up Git credentials
 ✅ Starting Backend Build
-✅ Executing command: npm install
+✅ Executing command: npm ci --no-optional
 ⚠️  npm warn ERESOLVE overriding peer dependency (NORMAL - see below)
-✅ Executing command: npm rebuild @parcel/watcher
 ✅ Executing command: npx ampx pipeline-deploy
 ✅ Backend deployment continues...
 ```
@@ -233,14 +202,14 @@ Error: No prebuild or local build of @parcel/watcher found.
 Tried @parcel/watcher-linux-x64-glibc.
 ```
 
-**Root Cause**: Native Node.js modules need to be rebuilt for AWS Linux environment.
+**Root Cause**: Optional native dependencies causing platform compatibility issues in CI.
 
-**Solution Applied**: 
-1. ✅ Changed from `npm ci` to `npm install` for better native dependency handling
-2. ✅ Added `npm rebuild @parcel/watcher` to rebuild native modules for Linux
-3. ✅ Updated both backend and frontend phases
+**Smart Solution Applied**: 
+1. ✅ Added `--no-optional` flag to `npm ci` commands
+2. ✅ Keeps amplify.yml clean and simple
+3. ✅ Skips problematic optional dependencies while preserving required ones
 
-**Result**: ✅ **NATIVE DEPENDENCIES NOW BUILDING CORRECTLY** - Deployment should proceed!
+**Result**: ✅ **CLEAN, SMART FIX** - No complex rebuilding needed!
 
 ### ✅ Simplified Configuration Success
 - ✅ Clean, official Amplify Gen 2 patterns
@@ -356,15 +325,14 @@ Error: No prebuild or local build of @parcel/watcher found.
 Tried @parcel/watcher-linux-x64-glibc.
 ```
 
-**Root Cause**: Native dependencies need to be rebuilt for AWS Linux environment.
+**Root Cause**: Optional native dependencies cause platform compatibility issues in CI environments.
 
-**Solution**: ✅ **Fixed in amplify.yml**
+**Solution**: ✅ **Fixed with --no-optional flag**
 ```yaml
-- npm install                    # Better compatibility than npm ci
-- npm rebuild @parcel/watcher    # Rebuild native deps for platform
+- npm ci --no-optional           # Skip problematic optional dependencies
 ```
 
-**Why this happens**: `@parcel/watcher` is a native Node.js module that needs platform-specific binaries. AWS Amplify runs on Linux, but the package may have been built for a different platform.
+**Why this works**: `@parcel/watcher` is an optional dependency that's not required for the build. The `--no-optional` flag tells npm to skip it entirely, avoiding platform compilation issues while keeping all essential dependencies.
 
 ### Build Environment Details
 
@@ -385,21 +353,21 @@ Tried @parcel/watcher-linux-x64-glibc.
 
 ### Error Resolution Patterns
 
-#### npm install Issues:
+#### npm ci Issues:
 ```bash
-# If npm install fails, check:
-1. package.json syntax is valid
+# If npm ci --no-optional fails, check:
+1. package-lock.json is committed and up to date
 2. No conflicting package versions
 3. Network connectivity
-4. Platform-specific dependencies (native modules)
+4. Platform-specific dependencies (now handled by --no-optional)
 ```
 
-#### Native Dependencies Issues:
+#### Optional Dependencies Issues:
 ```bash
-# If native modules fail to build:
-1. npm rebuild <package-name>
-2. Ensure platform compatibility
-3. Check for missing build tools
+# If optional dependencies cause problems:
+1. Use --no-optional flag (already implemented)
+2. Check if the optional dependency is actually needed
+3. Consider excluding specific packages if needed
 ```
 
 #### Deployment Issues:

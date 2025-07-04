@@ -3,8 +3,7 @@ backend:
   phases:
     build:
       commands:
-        - npm install
-        - npm rebuild @parcel/watcher
+        - npm ci --no-optional
         - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
   cache:
     paths:
@@ -13,7 +12,7 @@ frontend:
   phases:
     preBuild:
       commands:
-        - npm install
+        - npm ci --no-optional
     build:
       commands:
         - npm run build
