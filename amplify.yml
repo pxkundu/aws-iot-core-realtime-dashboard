@@ -3,29 +3,39 @@ backend:
   phases:
     preBuild:
       commands:
-        # Use Node.js version from .nvmrc
+        # Use Node.js version from .nvmrc for consistency
         - nvm use || nvm install
         - node --version
         - npm --version
-        # Clear npm cache to avoid issues
-        - npm cache clean --force
+        # Verify we're in the correct directory
+        - pwd
     build:
       commands:
-        # Install with optional dependencies for platform-specific binaries
-        - npm ci --include=optional --cache .npm --prefer-offline
-        # Verify @parcel/watcher installation
-        - npm ls @parcel/watcher || npm install @parcel/watcher --force
+        # Install dependencies for simplified auth-only backend
+        - npm ci --prefer-offline --no-audit
+        # Verify backend configuration before deployment
+        - cd amplify && npx tsc --noEmit
+        # Deploy Amplify Gen 2 backend
         - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
+  cache:
+    paths:
+      - node_modules/**/*
+      - amplify/node_modules/**/*
+      - .npm/**/*
 frontend:
   phases:
     preBuild:
       commands:
-        # Use Node.js version from .nvmrc
+        # Use Node.js version from .nvmrc for consistency
         - nvm use || nvm install
-        - npm ci --legacy-peer-deps --include=optional
+        - node --version
+        - npm --version
+        # Install frontend dependencies (when frontend exists)
+        - test -f package.json && npm ci --legacy-peer-deps --no-audit || echo "No frontend package.json found"
     build:
       commands:
-        - npm run build
+        # Build frontend (when frontend exists)
+        - test -f package.json && npm run build || echo "No frontend build script found"
   artifacts:
     baseDirectory: dist
     files:

@@ -13,13 +13,5 @@
   "devDependencies": {
     "@aws-amplify/backend": "^1.16.1",
     "@aws-amplify/backend-cli": "^1.8.0"
-  },
-  "dependencies": {
-    "@aws-sdk/client-location": "^3.734.0",
-    "@aws-sdk/client-dynamodb": "^3.734.0",
-    "@aws-sdk/lib-dynamodb": "^3.734.0",
-    "@aws-sdk/client-cognito-identity-provider": "^3.734.0",
-    "@aws-sdk/client-ses": "^3.734.0",
-    "@aws-sdk/client-lambda": "^3.734.0"
   }
 }
