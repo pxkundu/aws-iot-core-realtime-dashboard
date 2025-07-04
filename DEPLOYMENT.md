@@ -85,8 +85,7 @@ backend:
   phases:
     build:
       commands:
-        - npm ci --no-optional               # Skip optional deps that cause platform issues
-        - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
+        - npm ci
   cache:
     paths:
       - node_modules/**/*
@@ -94,10 +93,10 @@ frontend:
   phases:
     preBuild:
       commands:
-        - npm ci --no-optional               # Skip optional deps
+        - npm ci
     build:
       commands:
-        - npm run build                       # Build frontend
+        - npm run build
   artifacts:
     baseDirectory: dist
     files:
@@ -117,8 +116,7 @@ backend:
   phases:
     build:
       commands:
-        - npm ci --no-optional               # Skips problematic optional dependencies
-        - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
+        - npm ci
 ```
 
 ❌ **Alternative** (More Complex):
@@ -142,9 +140,8 @@ backend:
 ✅ Cloning repository: git@github.com:your-repo.git
 ✅ Successfully cleaned up Git credentials
 ✅ Starting Backend Build
-✅ Executing command: npm ci --no-optional
+✅ Executing command: npm ci
 ⚠️  npm warn ERESOLVE overriding peer dependency (NORMAL - see below)
-✅ Executing command: npx ampx pipeline-deploy
 ✅ Backend deployment continues...
 ```
 
