@@ -39,11 +39,10 @@ const DemoPlaceholderPage: FC<DemoPlaceholderPageProps> = ({ show, value, setVal
 						{show.sidebar && (
 							<Sidebar
 								onCloseSidebar={() => {}}
-								onShowSettings={() => {}}
-								onShowAboutModal={() => {}}
-								onShowUnauthSimulation={() => {}}
-								onOpenFeedbackModal={() => {}}
-								onOpenSignInModal={() => {}}
+											onShowSettings={() => {}}
+			onShowAboutModal={() => {}}
+			onShowUnauthSimulation={() => {}}
+			onOpenSignInModal={() => {}}
 							/>
 						)}
 						{show.routeBox ? (

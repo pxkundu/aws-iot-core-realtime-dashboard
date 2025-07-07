@@ -1,128 +1,151 @@
-import { useCallback, useEffect } from "react";
+/* Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved. */
+/* SPDX-License-Identifier: MIT-0 */
 
-import { appConfig } from "@demo/core/constants";
-import { differenceInMilliseconds } from "date-fns";
+import { useEffect, useState } from 'react';
+import { getCurrentUser, signOut, fetchAuthSession, AuthUser } from 'aws-amplify/auth';
+import { Hub } from 'aws-amplify/utils';
 
-import useAuth from "./useAuth";
-import useClient from "./useClient";
-import useIot from "./useIot";
+export interface AuthState {
+	user: AuthUser | null;
+	isAuthenticated: boolean;
+	isLoading: boolean;
+	error: string | null;
+}
 
-const {
-	API_KEYS,
-	PERSIST_STORAGE_KEYS: { SHOULD_CLEAR_CREDENTIALS }
-} = appConfig;
-let timeout: NodeJS.Timeout | undefined;
+export interface AuthContextType extends AuthState {
+	signOut: () => Promise<void>;
+	clearError: () => void;
+	refreshAuth: () => Promise<void>;
+}
 
-const useAuthManager = () => {
-	const { credentials, fetchCredentials, clearCredentials, baseValues, apiKey, fetchLocationClientConfigWithApiKey } =
-		useAuth();
-	const {
-		placesClient,
-		createPlacesClient,
-		routesClient,
-		createRoutesClient,
-		locationClient,
-		createLocationClient,
-		iotClient,
-		createIotClient,
-		resetLocationAndIotClients
-	} = useClient();
-	const { attachPolicy } = useIot();
-	const shouldClearCredentials = localStorage.getItem(SHOULD_CLEAR_CREDENTIALS) === "true";
+const useAuthManager = (): AuthContextType => {
+	const [authState, setAuthState] = useState<AuthState>({
+		user: null,
+		isAuthenticated: false,
+		isLoading: false, // Start with false so app loads immediately
+		error: null,
+	});
 
-	/* Instantiate Places and Routes clients whenever the apiKey changes */
-	useEffect(() => {
-		if (!!apiKey && baseValues) {
-			(async () => {
-				const apiKeyRegion = baseValues.region in API_KEYS ? baseValues.region : Object.keys(API_KEYS)[0];
-				const locationClientConfig = await fetchLocationClientConfigWithApiKey(apiKey, apiKeyRegion);
+	const clearError = () => {
+		setAuthState(prev => ({ ...prev, error: null }));
+	};
 
-				if (locationClientConfig) {
-					!placesClient && createPlacesClient(locationClientConfig);
-					!routesClient && createRoutesClient(locationClientConfig);
-				}
-			})();
-		}
-	}, [
-		apiKey,
-		baseValues,
-		fetchLocationClientConfigWithApiKey,
-		placesClient,
-		createPlacesClient,
-		routesClient,
-		createRoutesClient
-	]);
-
-	const clearCredsAndClients = useCallback(() => {
-		clearCredentials();
-		resetLocationAndIotClients();
-	}, [clearCredentials, resetLocationAndIotClients]);
-
-	if (shouldClearCredentials || (!!credentials && !credentials?.identityId)) {
-		localStorage.removeItem(SHOULD_CLEAR_CREDENTIALS);
-		clearCredsAndClients();
-	}
-
-	const refreshCredentials = useCallback(() => {
-		clearCredsAndClients();
-	}, [clearCredsAndClients]);
-
-	/* Fetch the current user credentials */
-	useEffect(() => {
-		if (credentials && credentials.expiration) {
-			const now = new Date();
-			const expiration = new Date(credentials.expiration);
-
-			if (now > expiration) {
-				/* If the credentials are expired, refresh them */
-				refreshCredentials();
+	const checkAuthState = async () => {
+		try {
+			// Don't set loading state - check auth silently in background
+			
+			// Get current user
+			const user = await getCurrentUser();
+			
+			// Verify session is valid
+			const session = await fetchAuthSession();
+			
+			if (user && session.tokens) {
+				console.log('✅ User authenticated:', user.username);
+				setAuthState(prev => ({
+					...prev,
+					user,
+					isAuthenticated: true,
+					error: null,
+				}));
 			} else {
-				/* If the credentials are not expired, set the refresh timeout */
-				timeout && clearTimeout(timeout);
-				timeout = setTimeout(() => {
-					refreshCredentials();
-				}, differenceInMilliseconds(new Date(credentials.expiration || 0), now) - 5 * 60 * 1000); /* Refresh 5 minutes before expiration */
+				console.log('ℹ️ No user session found');
+				setAuthState(prev => ({
+					...prev,
+					user: null,
+					isAuthenticated: false,
+					error: null,
+				}));
 			}
-		} else {
-			/* If the credentials are not present, fetch them */
-			(async () => {
-				await fetchCredentials();
-			})();
-		}
-	}, [credentials, fetchCredentials, clearCredsAndClients, refreshCredentials]);
-
-	/* Instantiate location client for Geofences and Trackers and iot client whenever the credentials change */
-	useEffect(() => {
-		if (credentials) {
-			if (baseValues) {
-				const { region } = baseValues;
-				!locationClient &&
-					createLocationClient({ ...credentials, expiration: new Date(credentials!.expiration!) }, region);
-				!iotClient && createIotClient({ ...credentials, expiration: new Date(credentials!.expiration!) }, region);
-			}
-		}
-	}, [credentials, iotClient, locationClient, createIotClient, createLocationClient, baseValues]);
-
-	const _attachPolicy = useCallback(async () => {
-		if (credentials && credentials?.expiration) {
-			const now = new Date();
-			const expiration = new Date(credentials.expiration);
-
-			if (now > expiration) {
-				/* If the credentials are expired, refresh them */
-				refreshCredentials();
+		} catch (error) {
+			// This is expected when no user is signed in - not an error condition
+			if (error instanceof Error && error.name === 'UserUnAuthenticatedException') {
+				console.log('ℹ️ No authenticated user found (this is normal for new visitors)');
 			} else {
-				await attachPolicy(credentials.identityId);
+				console.log('⚠️ Authentication check failed:', error);
 			}
+			setAuthState(prev => ({
+				...prev,
+				user: null,
+				isAuthenticated: false,
+				error: null, // Don't treat "not authenticated" as an error
+			}));
 		}
-	}, [credentials, refreshCredentials, attachPolicy]);
+	};
 
-	/* Attach IoT policy to unauth user to ensure successful websocket connection */
+	const handleSignOut = async () => {
+		try {
+			await signOut();
+			setAuthState(prev => ({
+				...prev,
+				user: null,
+				isAuthenticated: false,
+				error: null,
+			}));
+		} catch (error) {
+			console.error('Sign out error:', error);
+			setAuthState(prev => ({
+				...prev,
+				error: error instanceof Error ? error.message : 'Sign out failed',
+			}));
+		}
+	};
+
+	const refreshAuth = async () => {
+		await checkAuthState();
+	};
+
 	useEffect(() => {
-		_attachPolicy();
-	}, [_attachPolicy]);
+		// Check auth state on mount
+		checkAuthState();
 
-	return { clearCredsAndClients };
+		// Listen to auth events
+		const hubListener = (data: { payload: { event: string } }) => {
+			const { event } = data.payload;
+			
+			switch (event) {
+				case 'signedIn':
+					console.log('User signed in');
+					checkAuthState();
+					break;
+				case 'signedOut':
+					console.log('User signed out');
+					setAuthState(prev => ({
+						...prev,
+						user: null,
+						isAuthenticated: false,
+						error: null,
+					}));
+					break;
+				case 'tokenRefresh':
+					console.log('Token refreshed');
+					checkAuthState();
+					break;
+				case 'signInFailure':
+					console.log('Sign in failure');
+					setAuthState(prev => ({
+						...prev,
+						error: 'Sign in failed',
+					}));
+					break;
+				default:
+					break;
+			}
+		};
+
+		const unsubscribe = Hub.listen('auth', hubListener);
+
+		return () => {
+			unsubscribe();
+		};
+	}, []);
+
+	return {
+		...authState,
+		signOut: handleSignOut,
+		clearError,
+		refreshAuth,
+	};
 };
 
 export default useAuthManager;

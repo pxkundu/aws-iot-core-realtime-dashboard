@@ -3,9 +3,10 @@
 
 import { FC, lazy } from "react";
 
-import { Button, Card, Flex, Text, View } from "@aws-amplify/ui-react";
+import { Button, Card, Flex, Text, View, Divider } from "@aws-amplify/ui-react";
 import { IconClose, IconCompass, IconGear, IconInfo, IconRadar } from "@demo/assets/svgs";
 import { appConfig } from "@demo/core/constants";
+import { useAuth } from "@demo/core/AuthProvider";
 import { useUnauthSimulation } from "@demo/hooks";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -22,7 +23,6 @@ export interface SidebarProps {
 	onShowSettings: () => void;
 	onShowAboutModal: () => void;
 	onShowUnauthSimulation: () => void;
-	onOpenFeedbackModal: () => void;
 	onOpenSignInModal: () => void;
 }
 
@@ -31,16 +31,25 @@ const Sidebar: FC<SidebarProps> = ({
 	onShowSettings,
 	onShowAboutModal,
 	onShowUnauthSimulation,
-	onOpenFeedbackModal: _onOpenFeedbackModal,
 	onOpenSignInModal
 }) => {
 	const navigate = useNavigate();
 	const { t } = useTranslation();
+	const { user, isAuthenticated, signOut } = useAuth();
 	const { setHideGeofenceTrackerShortcut } = useUnauthSimulation();
 
 	const onClickSignInButton = () => {
 		onCloseSidebar();
 		onOpenSignInModal();
+	};
+
+	const onClickSignOutButton = async () => {
+		try {
+			await signOut();
+			onCloseSidebar();
+		} catch (error) {
+			console.error('Sign out failed:', error);
+		}
 	};
 
 	const onClickUnauthSimulation = () => {
@@ -116,18 +125,41 @@ const Sidebar: FC<SidebarProps> = ({
 					{t("fm__provide_feedback_btn.text")}
 				</Button>
 			</View> */}
-			<View className="button-wrapper">
-				<Button
-					data-testid="sign-in-button"
-					variation="primary"
-					fontFamily="AmazonEmber-Bold"
-					textAlign="center"
-					marginTop="0.62rem"
-					onClick={() => onClickSignInButton()}
-				>
-					{t("fm__sign_in_btn.text")}
-				</Button>
-			</View>
+			{isAuthenticated && user ? (
+				<>
+					<Divider margin="1rem 0" />
+					<Flex direction="column" className="user-info-section" padding="0 1.25rem">
+						<Text className="user-info-label" fontSize="0.75rem" color="gray" marginBottom="0.25rem">
+							Signed in as:
+						</Text>
+						<Text className="user-email" fontSize="0.875rem" fontWeight="bold" marginBottom="1rem">
+							{user.signInDetails?.loginId || user.username}
+						</Text>
+						<Button
+							data-testid="sign-out-button"
+							variation="primary"
+							fontFamily="AmazonEmber-Bold"
+							textAlign="center"
+							onClick={onClickSignOutButton}
+						>
+							Sign Out
+						</Button>
+					</Flex>
+				</>
+			) : (
+				<View className="button-wrapper">
+					<Button
+						data-testid="sign-in-button"
+						variation="primary"
+						fontFamily="AmazonEmber-Bold"
+						textAlign="center"
+						marginTop="0.62rem"
+						onClick={() => onClickSignInButton()}
+					>
+						{t("fm__sign_in_btn.text")}
+					</Button>
+				</View>
+			)}
 		</Card>
 	);
 };

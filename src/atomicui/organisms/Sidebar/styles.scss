@@ -126,6 +126,23 @@
 	padding: 16px;
 }
 
+.side-bar .user-info-section {
+	margin-top: auto;
+	width: 100%;
+
+	.user-info-label {
+		font-family: "AmazonEmber-Regular", sans-serif;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	}
+
+	.user-email {
+		font-family: "AmazonEmber-Bold", sans-serif;
+		word-break: break-word;
+		color: var(--amplify-components-text-color);
+	}
+}
+
 .list-item,
 .new-list-item {
 	.sub-menu-container {

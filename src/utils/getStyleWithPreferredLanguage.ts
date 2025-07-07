@@ -33,7 +33,7 @@ const setPreferredLanguage = (style: any, language: string) => {
 
 	nextStyle.layers = nextStyle.layers.map((l: { type: string; layout: { [x: string]: any } }) => {
 		if (l.type !== "symbol" || !l?.layout?.["text-field"]) return l;
-		return updateLayer(l, /^name:([A-Za-z\-\_]+)$/g, `name:${language}`);
+		return updateLayer(l, /^name:([A-Za-z\-_]+)$/g, `name:${language}`);
 	});
 
 	return nextStyle;

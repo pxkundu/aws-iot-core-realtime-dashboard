@@ -5,6 +5,7 @@ import { StrictMode, Suspense } from "react";
 
 import { Loader } from "@aws-amplify/ui-react";
 import { AppWrapper } from "@demo/core/AppWrapper";
+import { AuthProvider } from "@demo/core/AuthProvider";
 import { RouteChunks } from "@demo/core/Routes";
 import { ToastContainer } from "@demo/core/Toast";
 import { appConfig } from "@demo/core/constants";
@@ -28,10 +29,12 @@ const App = () => {
 		return (
 			<StrictMode>
 				<Suspense fallback={<StaticLoader />}>
-					<AppWrapper>
-						<ToastContainer />
-						<RouterProvider fallbackElement={<StaticLoader />} router={router} />
-					</AppWrapper>
+					<AuthProvider>
+						<AppWrapper>
+							<ToastContainer />
+							<RouterProvider fallbackElement={<StaticLoader />} router={router} />
+						</AppWrapper>
+					</AuthProvider>
 				</Suspense>
 			</StrictMode>
 		);
