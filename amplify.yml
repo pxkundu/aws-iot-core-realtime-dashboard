@@ -19,9 +19,11 @@ backend:
         - nvm use 20
         - echo "Building Amplify backend and generating outputs"
         - cd amplify
-        - npx ampx generate outputs --branch $AWS_BRANCH --app-id $AWS_APP_ID --out ../amplify_outputs.json 2>/dev/null || echo "Using placeholder amplify_outputs.json"
+        - npx ampx generate outputs --branch $AWS_BRANCH --app-id $AWS_APP_ID --out ../amplify_outputs.json 2>/dev/null || echo "Failed to generate outputs, using placeholder"
         - cd ..
-        - cp amplify_outputs.json public/ 2>/dev/null || echo "No amplify_outputs.json to copy"
+        - echo "Ensuring amplify_outputs.json exists for frontend build"
+        - ls -la amplify_outputs.json || echo "File check failed"
+        - cp amplify_outputs.json public/ 2>/dev/null || echo "Copy to public failed"
         - npm run amplify:build
   cache:
     paths:
