@@ -34,7 +34,8 @@
 		"translate-content": "cd extra/translation-script-content && npm install && node index.js && cd ../../",
 		"translate-content-update": "cd extra/translation-script-content && npm install && node update-translation.js && cd ../../",
 		"amplify:deploy": "npx ampx sandbox",
-		"amplify:build": "cd amplify && npm install"
+		"amplify:build": "cd amplify && npm install",
+		"amplify:test-deploy": "echo 'Testing Amplify deployment process...' && rm -rf node_modules package-lock.json && npm install && cd amplify && rm -rf node_modules package-lock.json && npm install && cd .. && npm run build"
 	},
 	"dependencies": {
 		"@aws-amplify/ui-react": "^6.9.1",
@@ -85,7 +86,7 @@
 		"@typescript-eslint/parser": "^8.35.1",
 		"@vitejs/plugin-react": "^4.3.4",
 		"ajv": "^8.17.1",
-		"aws-cdk-lib": "^2.189.1",
+		"aws-cdk-lib": "^2.202.0",
 		"constructs": "^10.4.2",
 		"cypress": "^12.10.0",
 		"cypress-browser-permissions": "^1.1.0",
