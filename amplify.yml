@@ -20,22 +20,22 @@ backend:
         - echo "Building Amplify backend and preparing outputs"
         - echo "Environment check - Branch: $AWS_BRANCH, App ID: $AWS_APP_ID"
         - cd amplify  
-        - echo "📋 Available amplify CLI commands:"
+        - echo "Available amplify CLI commands:"
         - npx ampx --help 2>/dev/null || echo "ampx command not available"
-        - echo "🔍 Checking if backend is deployed..."
+        - echo "Checking if backend is deployed..."
         - npx ampx generate outputs --branch $AWS_BRANCH --app-id $AWS_APP_ID 2>&1 | tee /tmp/ampx_output.log || echo "Generate outputs command failed"
-        - if grep -q "Unknown argument" /tmp/ampx_output.log; then echo "❌ Invalid command syntax"; elif grep -q "error\|Error\|ERROR" /tmp/ampx_output.log; then echo "❌ Backend not ready for output generation"; else echo "✅ Output generation attempted"; fi
+        - if grep -q "Unknown argument" /tmp/ampx_output.log; then echo "Invalid command syntax"; elif grep -q "error\|Error\|ERROR" /tmp/ampx_output.log; then echo "Backend not ready for output generation"; else echo "Output generation attempted"; fi
         - cd ..
-        - echo "📁 Ensuring amplify_outputs.json exists for frontend build"
-        - if [ ! -f amplify_outputs.json ] || [ ! -s amplify_outputs.json ]; then echo "⚠️ Using placeholder amplify_outputs.json - backend outputs will be generated post-deployment"; fi
+        - echo "Ensuring amplify_outputs.json exists for frontend build"
+        - if [ ! -f amplify_outputs.json ] || [ ! -s amplify_outputs.json ]; then echo "Using placeholder amplify_outputs.json - backend outputs will be generated post-deployment"; fi
         - cp amplify_outputs.json public/ 2>/dev/null || echo "Copy to public failed"
         - npm run amplify:build
     postBuild:
       commands:
-        - echo "🔄 Post-build: Attempting to regenerate amplify_outputs.json after potential deployment"
+        - echo "Post-build: Attempting to regenerate amplify_outputs.json after potential deployment"
         - cd amplify
-        - npx ampx generate outputs --branch $AWS_BRANCH --app-id $AWS_APP_ID 2>/dev/null && echo "✅ Generated fresh outputs in post-build" || echo "ℹ️ Outputs generation not available in post-build phase"
-        - if [ -f amplify_outputs.json ]; then cp amplify_outputs.json ../amplify_outputs.json && cp amplify_outputs.json ../public/ && echo "✅ Updated outputs files"; fi
+        - npx ampx generate outputs --branch $AWS_BRANCH --app-id $AWS_APP_ID 2>/dev/null && echo "Generated fresh outputs in post-build" || echo "Outputs generation not available in post-build phase"
+        - if [ -f amplify_outputs.json ]; then cp amplify_outputs.json ../amplify_outputs.json && cp amplify_outputs.json ../public/ && echo "Updated outputs files"; fi
         - cd ..
   cache:
     paths:
@@ -61,8 +61,8 @@ frontend:
         - cp amplify_outputs.json dist/ 2>/dev/null || echo "No amplify_outputs.json to copy to dist"
     postBuild:
       commands:
-        - echo "🔄 Frontend post-build: Ensuring latest outputs are in dist folder"
-        - if [ -f amplify_outputs.json ]; then cp amplify_outputs.json dist/ && echo "✅ Updated dist/amplify_outputs.json"; else echo "⚠️ No amplify_outputs.json found for dist copy"; fi
+        - echo "Frontend post-build: Ensuring latest outputs are in dist folder"
+        - if [ -f amplify_outputs.json ]; then cp amplify_outputs.json dist/ && echo "Updated dist/amplify_outputs.json"; else echo "No amplify_outputs.json found for dist copy"; fi
   artifacts:
     baseDirectory: dist
     files:
