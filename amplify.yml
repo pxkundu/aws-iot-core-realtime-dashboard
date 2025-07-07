@@ -3,29 +3,26 @@ backend:
   phases:
     preBuild:
       commands:
-        - echo "Setting up Node.js 20 and installing backend dependency"
-        - "nvm install 20"
-        - "nvm use 20"
-        - "node --version"
-        - "npm --version"
-        - "rm -rf node_modules package-lock.json"
-        - "npm install --legacy-peer-deps"
-        - "cd amplify"
-        - "rm -rf node_modules package-lock.json"
-        - "npm install --legacy-peer-deps"
-        - "cd .."
+        - echo "Setting up Node.js 20 and installing backend dependencies"
+        - nvm install 20
+        - nvm use 20
+        - node --version
+        - npm --version
+        - rm -rf node_modules package-lock.json
+        - npm install --legacy-peer-deps
+        - cd amplify
+        - rm -rf node_modules package-lock.json
+        - npm install --legacy-peer-deps
+        - cd ..
     build:
       commands:
-        - "nvm use 20"
-        - echo "Building Amplify backend and preparing outputs"
-        - "cd amplify"
-        - "echo 'Available amplify CLI commands:'"
-        - "npx ampx --help 2>/dev/null || echo 'ampx command not available'"
-        - echo "Checking if backend is deployed..."
-        - "npx ampx generate outputs --branch $AWS_BRANCH --app-id $AWS_APP_ID || echo 'Generate outputs command failed'"
-        - "cd .."
+        - nvm use 20
+        - echo "Building Amplify backend and generating outputs"
+        - cd amplify
+        - "npx ampx generate outputs --branch $AWS_BRANCH --app-id $AWS_APP_ID 2>/dev/null || echo 'Failed to generate outputs, using placeholder'"
+        - cd ..
         - echo "Ensuring amplify_outputs.json exists for frontend build"
-        - "if [ ! -f amplify_outputs.json ]; then echo 'Using placeholder amplify_outputs.json'; fi"
+        - "ls -la amplify_outputs.json || echo 'File check failed'"
         - "cp amplify_outputs.json public/ 2>/dev/null || echo 'Copy to public failed'"
         - "npm run amplify:build"
     postBuild:
@@ -44,17 +41,17 @@ frontend:
     preBuild:
       commands:
         - echo "Setting up Node.js 20 for frontend build"
-        - "nvm use 20"
-        - "node --version"
-        - "npm --version"
-        - echo "Installing frontend dependencies"
-        - "rm -rf node_modules package-lock.json"
-        - "npm install --legacy-peer-deps"
+        - nvm use 20
+        - node --version
+        - npm --version
+        - echo "Installing frontend dependencies (backend deps handled in backend preBuild)"
+        - rm -rf node_modules package-lock.json
+        - npm install --legacy-peer-deps
     build:
       commands:
-        - "nvm use 20"
+        - nvm use 20
         - echo "Building frontend application"
-        - "npm run build"
+        - npm run build
         - echo "Copying amplify_outputs.json to dist folder"
         - "cp amplify_outputs.json dist/ 2>/dev/null || echo 'No amplify_outputs.json to copy to dist'"
     postBuild:
