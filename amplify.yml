@@ -3,7 +3,6 @@ backend:
   phases:
     preBuild:
       commands:
-        - echo "Setting up Node.js 20 and installing backend dependencies"
         - nvm install 20
         - nvm use 20
         - node --version
@@ -17,35 +16,9 @@ backend:
     build:
       commands:
         - nvm use 20
-        - echo "Building and deploying Amplify Gen 2 backend"
-        - export CI=1
-        - echo "Working directory: $(pwd)"
-        - echo "Listing amplify directory contents:"
         - ls -la amplify/
-        - echo "Deploying backend resources from root directory..."
         - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
-        - echo "Generating outputs..."
         - npx ampx generate outputs --branch $AWS_BRANCH --app-id $AWS_APP_ID
-        - echo "Verifying amplify_outputs.json exists"
-        - ls -la amplify_outputs.json || echo "amplify_outputs.json not found"
-        - cp amplify_outputs.json public/ 2>/dev/null || echo "Copy to public failed"
-        - |
-          if [ ! -f amplify_outputs.json ]; then
-            echo "Creating placeholder amplify_outputs.json"
-            cat > amplify_outputs.json << 'EOF'
-          {
-            "version": "1",
-            "auth": {
-              "aws_region": "${AWS_DEFAULT_REGION:-us-east-1}",
-              "user_pool_id": "placeholder",
-              "user_pool_client_id": "placeholder", 
-              "identity_pool_id": "placeholder"
-            }
-          }
-          EOF
-            cp amplify_outputs.json public/
-            echo "Using placeholder configuration - backend features will be limited"
-          fi
         - npm run amplify:build
   cache:
     paths:
@@ -55,26 +28,15 @@ frontend:
   phases:
     preBuild:
       commands:
-        - echo "Setting up Node.js 20 for frontend build"
         - nvm use 20
         - node --version
         - npm --version
-        - echo "Installing frontend dependencies"
         - rm -rf node_modules package-lock.json
         - npm install --legacy-peer-deps
     build:
       commands:
         - nvm use 20
-        - echo "Building frontend application"
         - npm run build
-        - echo "Copying amplify_outputs.json to dist folder"
-        - cp amplify_outputs.json dist/ 2>/dev/null || echo "No amplify_outputs.json to copy to dist"
-        - |
-          if [ -f dist/amplify_outputs.json ]; then
-            echo "amplify_outputs.json copied to dist folder"
-          else
-            echo "amplify_outputs.json not found in dist folder"
-          fi
   artifacts:
     baseDirectory: dist
     files:
