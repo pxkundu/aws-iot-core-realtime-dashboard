@@ -5,13 +5,12 @@ import { FC, lazy } from "react";
 
 import { Button, Card, Flex, Text, View } from "@aws-amplify/ui-react";
 import { IconClose, IconCompass, IconGear, IconInfo, IconRadar } from "@demo/assets/svgs";
-import { appConfig, marketingMenuOptionsData } from "@demo/core/constants";
+import { appConfig } from "@demo/core/constants";
 import { useUnauthSimulation } from "@demo/hooks";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import "./styles.scss";
 
-const List = lazy(() => import("@demo/atomicui/atoms/List").then(module => ({ default: module.List })));
 const Logo = lazy(() => import("@demo/atomicui/atoms/Logo").then(module => ({ default: module.Logo })));
 
 const {
@@ -32,17 +31,12 @@ const Sidebar: FC<SidebarProps> = ({
 	onShowSettings,
 	onShowAboutModal,
 	onShowUnauthSimulation,
-	onOpenFeedbackModal,
+	onOpenFeedbackModal: _onOpenFeedbackModal,
 	onOpenSignInModal
 }) => {
 	const navigate = useNavigate();
 	const { t } = useTranslation();
 	const { setHideGeofenceTrackerShortcut } = useUnauthSimulation();
-
-	const onClickFeedbackButton = () => {
-		onCloseSidebar();
-		onOpenFeedbackModal();
-	};
 
 	const onClickSignInButton = () => {
 		onCloseSidebar();

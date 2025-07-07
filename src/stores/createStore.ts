@@ -22,9 +22,8 @@ const createStore = <T>(
 		return init;
 	};
 
-	/* @ts-expect-error: valid params */
 	const createDataStore = persistant ? persist(createState, { name: localStorageKey }) : createState;
-	/* @ts-expect-error: valid params */
+	// @ts-expect-error Zustand middleware type compatibility issue
 	return create<T & BaseStateProps>(devtools(createDataStore));
 };
 

@@ -17,21 +17,37 @@ backend:
     build:
       commands:
         - nvm use 20
-        - echo "Building Amplify backend and generating outputs"
+        - echo "Deploying Amplify Gen 2 backend using CI/CD pipeline"
+        - export CI=1
         - cd amplify
-        - "npx ampx generate outputs --branch $AWS_BRANCH --app-id $AWS_APP_ID 2>/dev/null || echo 'Failed to generate outputs, using placeholder'"
+        - echo "Deploying backend resources..."
+        - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
+        - echo "Generating outputs..."
+        - npx ampx generate outputs --branch $AWS_BRANCH --app-id $AWS_APP_ID
+        - echo "Moving outputs to project root..."
+        - mv amplify_outputs.json ../ 2>/dev/null || echo "amplify_outputs.json not found in amplify directory"
         - cd ..
-        - echo "Ensuring amplify_outputs.json exists for frontend build"
-        - "ls -la amplify_outputs.json || echo 'File check failed'"
-        - "cp amplify_outputs.json public/ 2>/dev/null || echo 'Copy to public failed'"
-        - "npm run amplify:build"
-    postBuild:
-      commands:
-        - echo "Post-build: Attempting to regenerate amplify_outputs.json after potential deployment"
-        - "cd amplify"
-        - "npx ampx generate outputs --branch $AWS_BRANCH --app-id $AWS_APP_ID || echo 'Outputs not available in post-build'"
-        - "if [ -f amplify_outputs.json ]; then cp amplify_outputs.json ../amplify_outputs.json && cp amplify_outputs.json ../public/; fi"
-        - "cd .."
+        - echo "Verifying amplify_outputs.json exists"
+        - ls -la amplify_outputs.json || echo "amplify_outputs.json check failed"
+        - cp amplify_outputs.json public/ 2>/dev/null || echo "Copy to public failed"
+        - |
+          if [ ! -f amplify_outputs.json ]; then
+            echo "Creating placeholder amplify_outputs.json"
+            cat > amplify_outputs.json << 'EOF'
+          {
+            "version": "1",
+            "auth": {
+              "aws_region": "${AWS_DEFAULT_REGION:-us-east-1}",
+              "user_pool_id": "placeholder",
+              "user_pool_client_id": "placeholder", 
+              "identity_pool_id": "placeholder"
+            }
+          }
+          EOF
+            cp amplify_outputs.json public/
+            echo "Using placeholder configuration - backend features will be limited"
+          fi
+        - npm run amplify:build
   cache:
     paths:
       - node_modules/**/*
@@ -44,7 +60,7 @@ frontend:
         - nvm use 20
         - node --version
         - npm --version
-        - echo "Installing frontend dependencies (backend deps handled in backend preBuild)"
+        - echo "Installing frontend dependencies"
         - rm -rf node_modules package-lock.json
         - npm install --legacy-peer-deps
     build:
@@ -53,11 +69,13 @@ frontend:
         - echo "Building frontend application"
         - npm run build
         - echo "Copying amplify_outputs.json to dist folder"
-        - "cp amplify_outputs.json dist/ 2>/dev/null || echo 'No amplify_outputs.json to copy to dist'"
-    postBuild:
-      commands:
-        - echo "Frontend post-build: Ensuring latest outputs are in dist folder"
-        - "if [ -f amplify_outputs.json ]; then cp amplify_outputs.json dist/; fi"
+        - cp amplify_outputs.json dist/ 2>/dev/null || echo "No amplify_outputs.json to copy to dist"
+        - |
+          if [ -f dist/amplify_outputs.json ]; then
+            echo "amplify_outputs.json copied to dist folder"
+          else
+            echo "amplify_outputs.json not found in dist folder"
+          fi
   artifacts:
     baseDirectory: dist
     files:

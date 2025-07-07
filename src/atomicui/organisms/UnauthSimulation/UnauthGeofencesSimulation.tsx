@@ -20,8 +20,7 @@ const UnauthGeofencesSimulation: FC<UnauthGeofencesSimulationProps> = ({
 	trackerPos
 }) => {
 	const [geofences, setGeofences] = useState<Array<ListGeofenceResponseEntry> | undefined>(undefined);
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	const [isPending, startTransition] = useTransition();
+	const [, startTransition] = useTransition();
 	const { getGeofencesList } = useGeofence();
 
 	const fetchGeofencesList = useCallback(

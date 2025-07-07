@@ -740,8 +740,7 @@ const RouteBox: FC<RouteBoxProps> = ({
 						width="100%"
 						label={t("avoid.text")}
 						defaultOption={Object.entries(routeOptions)
-							// eslint-disable-next-line @typescript-eslint/no-unused-vars
-							.filter(([_, value]) => value)
+							.filter(([, value]) => value)
 							.map(([key]) => ({ value: key, label: t(key) }))}
 						options={[
 							{ value: "avoidTolls", label: t("avoid_tolls.text") },

@@ -10,7 +10,8 @@ const mockProps: SidebarProps = {
 	onShowSettings: jest.fn(),
 	onShowAboutModal: jest.fn(),
 	onShowUnauthSimulation: jest.fn(),
-	onOpenFeedbackModal: jest.fn()
+	onOpenFeedbackModal: jest.fn(),
+	onOpenSignInModal: jest.fn(),
 };
 
 describe("<Sidebar />", () => {

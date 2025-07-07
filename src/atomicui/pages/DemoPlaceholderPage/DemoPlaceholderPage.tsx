@@ -43,6 +43,7 @@ const DemoPlaceholderPage: FC<DemoPlaceholderPageProps> = ({ show, value, setVal
 								onShowAboutModal={() => {}}
 								onShowUnauthSimulation={() => {}}
 								onOpenFeedbackModal={() => {}}
+								onOpenSignInModal={() => {}}
 							/>
 						)}
 						{show.routeBox ? (
