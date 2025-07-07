@@ -5,14 +5,9 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 
 import App from "./App";
-import { configureAmplify } from "./amplify-config";
+import "./amplify-config"; // This will configure Amplify synchronously
 
 import "./locales/i18n";
 
-// Configure Amplify with Cognito authentication
-const initializeApp = async () => {
-  await configureAmplify();
-  ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(<App />);
-};
-
-initializeApp();
+// Render the app directly since Amplify is configured synchronously
+ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(<App />);
