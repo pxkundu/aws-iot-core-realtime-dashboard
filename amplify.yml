@@ -3,7 +3,11 @@ backend:
   phases:
     preBuild:
       commands:
-        - echo "Installing backend dependencies with npm install to avoid npm ci conflicts"
+        - echo "Setting up Node.js 20 and installing backend dependencies"
+        - nvm install 20
+        - nvm use 20
+        - node --version
+        - npm --version
         - rm -rf node_modules package-lock.json
         - npm install --legacy-peer-deps
         - cd amplify
@@ -12,6 +16,12 @@ backend:
         - cd ..
     build:
       commands:
+        - nvm use 20
+        - echo "Building Amplify backend and generating outputs"
+        - cd amplify
+        - npx ampx generate outputs --branch $AWS_BRANCH --app-id $AWS_APP_ID --out ../amplify_outputs.json 2>/dev/null || echo "Using placeholder amplify_outputs.json"
+        - cd ..
+        - cp amplify_outputs.json public/ 2>/dev/null || echo "No amplify_outputs.json to copy"
         - npm run amplify:build
   cache:
     paths:
@@ -21,12 +31,20 @@ frontend:
   phases:
     preBuild:
       commands:
+        - echo "Setting up Node.js 20 for frontend build"
+        - nvm use 20
+        - node --version
+        - npm --version
         - echo "Installing frontend dependencies (backend deps handled in backend preBuild)"
         - rm -rf node_modules package-lock.json
         - npm install --legacy-peer-deps
     build:
       commands:
+        - nvm use 20
+        - echo "Building frontend application"
         - npm run build
+        - echo "Copying amplify_outputs.json to dist folder"
+        - cp amplify_outputs.json dist/ 2>/dev/null || echo "No amplify_outputs.json to copy to dist"
   artifacts:
     baseDirectory: dist
     files:
