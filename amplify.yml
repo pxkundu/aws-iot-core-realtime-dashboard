@@ -17,18 +17,17 @@ backend:
     build:
       commands:
         - nvm use 20
-        - echo "Deploying Amplify Gen 2 backend using CI/CD pipeline"
+        - echo "Building and deploying Amplify Gen 2 backend"
         - export CI=1
-        - cd amplify
-        - echo "Deploying backend resources..."
+        - echo "Working directory: $(pwd)"
+        - echo "Listing amplify directory contents:"
+        - ls -la amplify/
+        - echo "Deploying backend resources from root directory..."
         - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
         - echo "Generating outputs..."
         - npx ampx generate outputs --branch $AWS_BRANCH --app-id $AWS_APP_ID
-        - echo "Moving outputs to project root..."
-        - mv amplify_outputs.json ../ 2>/dev/null || echo "amplify_outputs.json not found in amplify directory"
-        - cd ..
         - echo "Verifying amplify_outputs.json exists"
-        - ls -la amplify_outputs.json || echo "amplify_outputs.json check failed"
+        - ls -la amplify_outputs.json || echo "amplify_outputs.json not found"
         - cp amplify_outputs.json public/ 2>/dev/null || echo "Copy to public failed"
         - |
           if [ ! -f amplify_outputs.json ]; then
