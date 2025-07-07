@@ -29,6 +29,7 @@
 		"ci-test": "CI=true react-scripts test",
 		"coverage": "react-scripts test --coverage --watchAll",
 		"prepare": "husky install",
+		"postinstall": "node -e \"try { require('@rollup/rollup-linux-x64-gnu') } catch (e) { console.log('Optional rollup binary not available on this platform') }\"",
 		"stylelint-check": "stylelint-config-prettier-check",
 		"translate-content": "cd extra/translation-script-content && npm install && node index.js && cd ../../",
 		"translate-content-update": "cd extra/translation-script-content && npm install && node update-translation.js && cd ../../",
@@ -137,6 +138,9 @@
 		"trim-newlines": "^3.0.1",
 		"underscore": "^1.12.1",
 		"underscore.string": "^3.3.5"
+	},
+	"optionalDependencies": {
+		"@rollup/rollup-linux-x64-gnu": "^4.0.0"
 	},
 	"jest": {
 		"moduleNameMapper": {
