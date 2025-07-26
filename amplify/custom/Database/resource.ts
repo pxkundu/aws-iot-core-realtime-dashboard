@@ -1,5 +1,6 @@
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { Construct } from 'constructs';
+import { RemovalPolicy } from 'aws-cdk-lib';
 
 export class DatabaseConstruct extends Construct {
   public readonly devicesTable: dynamodb.Table;
@@ -14,7 +15,7 @@ export class DatabaseConstruct extends Construct {
       partitionKey: { name: 'PK', type: dynamodb.AttributeType.STRING },
       sortKey: { name: 'SK', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      removalPolicy: dynamodb.RemovalPolicy.DESTROY, // For development
+      removalPolicy: RemovalPolicy.DESTROY, // For development
       pointInTimeRecovery: true
     });
 
@@ -24,7 +25,7 @@ export class DatabaseConstruct extends Construct {
       partitionKey: { name: 'PK', type: dynamodb.AttributeType.STRING },
       sortKey: { name: 'SK', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      removalPolicy: dynamodb.RemovalPolicy.DESTROY, // For development
+      removalPolicy: RemovalPolicy.DESTROY, // For development
       pointInTimeRecovery: true
     });
 
