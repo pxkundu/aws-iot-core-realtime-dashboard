@@ -18,7 +18,8 @@ const errors = {
 	excluded: ["Too Many Requests"],
 	missingCreds: "Missing credentials in config",
 	codes: [403, 404],
-	exceptions: ["ExpiredTokenException"]
+	exceptions: ["ExpiredTokenException"],
+	websocketErrors: ["connectionFailure", "connection_failure", "WebSocket connection failed"]
 };
 let isStackCorrupted = false;
 
@@ -63,6 +64,13 @@ export const errorHandler = (error: any, message?: string) => {
 		const { message: apiErrorMsg } = error;
 
 		if (!errors.excluded.includes(apiErrorMsg)) {
+			// Handle WebSocket specific errors
+			if (errors.websocketErrors.some(wsError => apiErrorMsg.includes(wsError))) {
+				console.warn("🔌 WebSocket connection error detected:", apiErrorMsg);
+				// Don't show toast for WebSocket errors as they're handled by the WebSocket service
+				return;
+			}
+
 			if (apiErrorMsg.includes(errors.missingCreds)) {
 				window.location.reload();
 				return;

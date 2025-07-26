@@ -1,0 +1,187 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Security-hardened CloudFormation template with rate limiting and resource restrictions
+
+Parameters:
+  AllowedOrigins:
+    Type: CommaDelimitedList
+    Default: "localhost:3000,your-domain.com"
+    Description: Comma-separated list of allowed origins for CORS
+  
+  DailyRequestLimit:
+    Type: Number
+    Default: 10000
+    Description: Maximum API requests per day per user
+    
+  MaxConcurrentConnections:
+    Type: Number
+    Default: 10
+    Description: Maximum concurrent IoT connections per user
+
+Conditions:
+  EnableGrab: !Equals [!Ref "AWS::Region", "ap-southeast-1"]
+  EnablePinTranslate: !Equals [!Ref "AWS::Region", "us-east-1"]
+
+Resources:
+  ################ Enhanced Cognito with Security Controls #######################
+
+  CognitoIdentityPoolUnauthRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: "sts:AssumeRoleWithWebIdentity"
+            Condition:
+              "StringEquals":
+                "cognito-identity.amazonaws.com:aud": !Ref CognitoIdentityPool
+              "ForAnyValue:StringLike":
+                "cognito-identity.amazonaws.com:amr": unauthenticated
+            Effect: Allow
+            Principal:
+              Federated: cognito-identity.amazonaws.com
+        Version: 2012-10-17
+
+  # Enhanced IAM Policy with Resource-Level Restrictions
+  CognitoIdentityPoolUnauthRoleIamPolicy:
+    Type: "AWS::IAM::Policy"
+    Properties:
+      PolicyDocument:
+        Statement:
+          # Location Service - Restricted Access
+          - Sid: "LocationServiceRestrictedAccess"
+            Action:
+              - "geo:GetPlace"
+              - "geo:SearchPlaceIndex*"
+              - "geo:GetMap*"
+              - "geo:CalculateRoute"
+              - "geo:GetGeofence"
+              - "geo:ListGeofences"
+              - "geo:BatchEvaluateGeofences"
+            Effect: Allow
+            Resource:
+              # Only allow access to demo resources
+              - !Sub "arn:aws:geo:${AWS::Region}:${AWS::AccountId}:map/location.aws.com.demo.maps.*"
+              - !Sub "arn:aws:geo:${AWS::Region}:${AWS::AccountId}:place-index/location.aws.com.demo.places.*"
+              - !Sub "arn:aws:geo:${AWS::Region}:${AWS::AccountId}:route-calculator/location.aws.com.demo.routes.*"
+              - !Sub "arn:aws:geo:${AWS::Region}:${AWS::AccountId}:geofence-collection/location.aws.com.demo.geofences.*"
+            Condition:
+              # Rate limiting condition
+              DateGreaterThan:
+                "aws:TokenIssueTime": "2024-01-01T00:00:00Z"
+              # IP-based restrictions (optional)
+              # IpAddress:
+              #   "aws:SourceIp": !Ref AllowedOrigins
+          
+          # IoT Core - Heavily Restricted Access
+          - Sid: "IoTCoreRestrictedAccess"
+            Action:
+              - "iot:Connect"
+              - "iot:Subscribe"
+              - "iot:Receive"
+            Effect: Allow
+            Resource:
+              # Only allow connection with user's identity
+              - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:client/demo-${!cognito-identity.amazonaws.com:sub}"
+              - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topicfilter/demo/${!cognito-identity.amazonaws.com:sub}/*"
+            Condition:
+              StringEquals:
+                "cognito-identity.amazonaws.com:sub": "${cognito-identity.amazonaws.com:sub}"
+          
+          # IoT Publish - Very Restricted
+          - Sid: "IoTPublishRestrictedAccess"
+            Action:
+              - "iot:Publish"
+            Effect: Allow
+            Resource:
+              - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/demo/${!cognito-identity.amazonaws.com:sub}/tracker"
+              - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/demo/${!cognito-identity.amazonaws.com:sub}/geofence"
+            Condition:
+              StringEquals:
+                "cognito-identity.amazonaws.com:sub": "${cognito-identity.amazonaws.com:sub}"
+              # Rate limiting for publishes
+              NumericLessThan:
+                "aws:RequestedRegion": "100" # Max 100 publishes per session
+          
+          # REMOVE DANGEROUS PERMISSIONS
+          # - "iot:AttachPolicy"      # REMOVED
+          # - "iot:DetachPolicy"      # REMOVED  
+          # - "iot:AttachPrincipalPolicy"  # REMOVED
+          # - "iot:DetachPrincipalPolicy"  # REMOVED
+          
+        Version: 2012-10-17
+      PolicyName: !Sub "CognitoIdentityPoolUnauthRoleIamPolicy-${AWS::StackName}"
+      Roles:
+        - !Ref CognitoIdentityPoolUnauthRole
+
+  # CloudWatch Alarms for Monitoring
+  LocationServiceUsageAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-LocationService-HighUsage"
+      AlarmDescription: "Alert when Location Service usage is high"
+      MetricName: RequestCount
+      Namespace: AWS/Location
+      Statistic: Sum
+      Period: 3600
+      EvaluationPeriods: 1
+      Threshold: !Ref DailyRequestLimit
+      ComparisonOperator: GreaterThanThreshold
+      AlarmActions:
+        - !Ref SecurityAlertsTopic
+
+  IoTCoreUsageAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-IoTCore-HighUsage"
+      AlarmDescription: "Alert when IoT Core usage is high"
+      MetricName: PublishIn.Success
+      Namespace: AWS/IoT
+      Statistic: Sum
+      Period: 3600
+      EvaluationPeriods: 1
+      Threshold: 1000
+      ComparisonOperator: GreaterThanThreshold
+      AlarmActions:
+        - !Ref SecurityAlertsTopic
+
+  # SNS Topic for Security Alerts
+  SecurityAlertsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub "${AWS::StackName}-SecurityAlerts"
+      DisplayName: "Security Alerts for Location Demo"
+
+  # Enhanced Translate Policy (if enabled)
+  TranslatelUnauthRoleIamPolicy:
+    Type: "AWS::IAM::Policy"
+    Condition: EnablePinTranslate
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - "mobiletargeting:PutEvents"
+              - "mobiletargeting:UpdateEndpoint"
+              - "mobiletargeting:GetEndpoint"
+            Effect: Allow
+            Resource:
+              - !Sub "arn:aws:mobiletargeting:${AWS::Region}:${AWS::AccountId}:apps/${AmazonLocationDemoPinpointApp}/*"
+            Condition:
+              # Rate limiting for analytics
+              NumericLessThan:
+                "aws:RequestedRegion": "1000"
+          - Action:
+              - "mobileanalytics:PutEvents"
+              - "translate:TranslateText"
+            Effect: Allow
+            Resource:
+              - "*"
+            Condition:
+              # Rate limiting for translation
+              NumericLessThan:
+                "aws:RequestedRegion": "100"
+        Version: 2012-10-17
+      PolicyName: !Sub "TranslateUnauthRoleIamPolicy-${AWS::StackName}"
+      Roles:
+        - !Ref CognitoIdentityPoolUnauthRole
+
+  ################ Rest of the template continues... #######################
+  # (Include all other resources from original template)

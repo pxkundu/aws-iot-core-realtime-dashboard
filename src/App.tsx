@@ -1,7 +1,7 @@
 /* Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved. */
 /* SPDX-License-Identifier: MIT-0 */
 
-import { StrictMode, Suspense } from "react";
+import { StrictMode, Suspense, useEffect } from "react";
 
 import { Loader } from "@aws-amplify/ui-react";
 import { AppWrapper } from "@demo/core/AppWrapper";
@@ -9,6 +9,7 @@ import { AuthProvider } from "@demo/core/AuthProvider";
 import { RouteChunks } from "@demo/core/Routes";
 import { ToastContainer } from "@demo/core/Toast";
 import { appConfig } from "@demo/core/constants";
+import { initializeSecurity } from "@demo/utils/securityValidation";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 
 const {
@@ -24,6 +25,11 @@ const router = createBrowserRouter(RouteChunks);
 
 const App = () => {
 	const localAppVersion = localStorage.getItem(LOCAL_APP_VERSION) || "";
+
+	// Initialize security monitoring (non-breaking)
+	useEffect(() => {
+		initializeSecurity();
+	}, []);
 
 	if (localAppVersion === APP_VERSION) {
 		return (

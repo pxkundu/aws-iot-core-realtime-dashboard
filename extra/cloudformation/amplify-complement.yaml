@@ -1,0 +1,255 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: AWS Services to complement Amplify backend for IoT Dashboard
+
+Parameters:
+  Environment:
+    Type: String
+    Default: "dev"
+    AllowedValues: ["dev", "staging", "prod"]
+    Description: Environment name
+
+  AmplifyIdentityPoolId:
+    Type: String
+    Default: "eu-west-1:97b8f1b0-78ce-4db1-b823-9de3dc5c1c98"
+    Description: "Amplify Identity Pool ID"
+
+Resources:
+  ################ Amazon Location Service Resources #######################
+
+  # Map Resources
+  DemoMap:
+    Type: "AWS::Location::Map"
+    Properties:
+      MapName: !Sub "aws-iot-dashboard-${Environment}-map"
+      Description: "Demo map for AWS IoT Dashboard"
+      Configuration:
+        Style: "VectorEsriStreets"
+
+  # Place Index for Search
+  DemoPlaceIndex:
+    Type: "AWS::Location::PlaceIndex"
+    Properties:
+      IndexName: !Sub "aws-iot-dashboard-${Environment}-places"
+      Description: "Place index for search functionality"
+      DataSource: "Esri"
+
+  # Route Calculator
+  DemoRouteCalculator:
+    Type: "AWS::Location::RouteCalculator"
+    Properties:
+      CalculatorName: !Sub "aws-iot-dashboard-${Environment}-routes"
+      Description: "Route calculator for navigation"
+
+  # Geofence Collection
+  DemoGeofenceCollection:
+    Type: "AWS::Location::GeofenceCollection"
+    Properties:
+      CollectionName: !Sub "aws-iot-dashboard-${Environment}-geofences"
+      Description: "Geofence collection for location tracking"
+
+  # Tracker
+  DemoTracker:
+    Type: "AWS::Location::Tracker"
+    Properties:
+      TrackerName: !Sub "aws-iot-dashboard-${Environment}-tracker"
+      Description: "Location tracker for IoT devices"
+
+  ################ Amazon Pinpoint Resources #######################
+
+  PinpointApplication:
+    Type: "AWS::Pinpoint::App"
+    Properties:
+      Name: !Sub "aws-iot-dashboard-${Environment}-analytics"
+
+  ################ DynamoDB Table #######################
+
+  DynamoDBTable:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      TableName: !Sub "aws-iot-dashboard-${Environment}-data"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: "PK"
+          AttributeType: "S"
+        - AttributeName: "SK"
+          AttributeType: "S"
+        - AttributeName: "GSI1PK"
+          AttributeType: "S"
+        - AttributeName: "GSI1SK"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "PK"
+          KeyType: "HASH"
+        - AttributeName: "SK"
+          KeyType: "RANGE"
+      GlobalSecondaryIndexes:
+        - IndexName: "GSI1"
+          KeySchema:
+            - AttributeName: "GSI1PK"
+              KeyType: "HASH"
+            - AttributeName: "GSI1SK"
+              KeyType: "RANGE"
+          Projection:
+            ProjectionType: "ALL"
+
+  ################ Lambda Functions #######################
+
+  GeofenceProcessorFunction:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      FunctionName: !Sub "aws-iot-dashboard-${Environment}-geofence-processor"
+      Runtime: nodejs20.x
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 30
+      Environment:
+        Variables:
+          IOT_ENDPOINT: !Sub "${AWS::AccountId}-ats.iot.${AWS::Region}.amazonaws.com"
+          DYNAMODB_TABLE: !Ref DynamoDBTable
+      Code:
+        ZipFile: |
+          exports.handler = async (event) => {
+            console.log('Geofence event:', JSON.stringify(event, null, 2));
+            return { statusCode: 200, body: 'OK' };
+          };
+
+  IoTPublisherFunction:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      FunctionName: !Sub "aws-iot-dashboard-${Environment}-iot-publisher"
+      Runtime: nodejs20.x
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 30
+      Environment:
+        Variables:
+          IOT_ENDPOINT: !Sub "${AWS::AccountId}-ats.iot.${AWS::Region}.amazonaws.com"
+      Code:
+        ZipFile: |
+          exports.handler = async (event) => {
+            console.log('IoT event:', JSON.stringify(event, null, 2));
+            return { statusCode: 200, body: 'OK' };
+          };
+
+  LambdaExecutionRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: LambdaCustomPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "iot:Publish"
+                  - "iot:Connect"
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - "dynamodb:GetItem"
+                  - "dynamodb:PutItem"
+                  - "dynamodb:UpdateItem"
+                  - "dynamodb:DeleteItem"
+                  - "dynamodb:Query"
+                  - "dynamodb:Scan"
+                Resource: !GetAtt DynamoDBTable.Arn
+
+  ################ CloudWatch Alarms #######################
+
+  LocationServiceUsageAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-LocationService-HighUsage"
+      AlarmDescription: "Alert when Location Service usage is high"
+      MetricName: RequestCount
+      Namespace: AWS/Location
+      Statistic: Sum
+      Period: 3600
+      EvaluationPeriods: 1
+      Threshold: 10000
+      ComparisonOperator: GreaterThanThreshold
+
+  IoTCoreUsageAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-IoTCore-HighUsage"
+      AlarmDescription: "Alert when IoT Core usage is high"
+      MetricName: PublishIn.Success
+      Namespace: AWS/IoT
+      Statistic: Sum
+      Period: 3600
+      EvaluationPeriods: 1
+      Threshold: 1000
+      ComparisonOperator: GreaterThanThreshold
+
+  ################ SNS Topic for Alerts #######################
+
+  SecurityAlertsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub "${AWS::StackName}-SecurityAlerts"
+      DisplayName: "Security Alerts for AWS IoT Dashboard"
+
+Outputs:
+  MapName:
+    Description: "Amazon Location Service Map Name"
+    Value: !Ref DemoMap
+    Export:
+      Name: !Sub "${AWS::StackName}-MapName"
+
+  PlaceIndexName:
+    Description: "Amazon Location Service Place Index Name"
+    Value: !Ref DemoPlaceIndex
+    Export:
+      Name: !Sub "${AWS::StackName}-PlaceIndexName"
+
+  RouteCalculatorName:
+    Description: "Amazon Location Service Route Calculator Name"
+    Value: !Ref DemoRouteCalculator
+    Export:
+      Name: !Sub "${AWS::StackName}-RouteCalculatorName"
+
+  GeofenceCollectionName:
+    Description: "Amazon Location Service Geofence Collection Name"
+    Value: !Ref DemoGeofenceCollection
+    Export:
+      Name: !Sub "${AWS::StackName}-GeofenceCollectionName"
+
+  TrackerName:
+    Description: "Amazon Location Service Tracker Name"
+    Value: !Ref DemoTracker
+    Export:
+      Name: !Sub "${AWS::StackName}-TrackerName"
+
+  IoTEndpoint:
+    Description: "AWS IoT Core Endpoint"
+    Value: !Sub "${AWS::AccountId}-ats.iot.${AWS::Region}.amazonaws.com"
+    Export:
+      Name: !Sub "${AWS::StackName}-IoTEndpoint"
+
+  PinpointApplicationId:
+    Description: "Amazon Pinpoint Application ID"
+    Value: !Ref PinpointApplication
+    Export:
+      Name: !Sub "${AWS::StackName}-PinpointApplicationId"
+
+  DynamoDBTableName:
+    Description: "DynamoDB Table Name"
+    Value: !Ref DynamoDBTable
+    Export:
+      Name: !Sub "${AWS::StackName}-DynamoDBTableName"
+
+  StackRegion:
+    Description: "AWS Region where the stack is deployed"
+    Value: !Ref AWS::Region
+    Export:
+      Name: !Sub "${AWS::StackName}-Region" 

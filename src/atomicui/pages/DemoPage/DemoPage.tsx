@@ -311,9 +311,10 @@ const DemoPage: FC = () => {
 
   const handleLogoClick = () => window.open(AWS_LOCATION, "_self");
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleSignIn = async (email: string, password: string) => {
     // TODO: Implement actual sign-in logic with AWS Cognito
-    console.log("Sign-in attempt:", { email, password });
+    console.log("Sign-in attempt for user:", email);
     
     // For now, simulate a successful sign-in
     // In a real implementation, you would:

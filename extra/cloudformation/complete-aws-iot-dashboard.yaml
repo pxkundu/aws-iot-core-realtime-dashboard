@@ -1,0 +1,415 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Complete AWS IoT Core Realtime Dashboard Infrastructure
+
+Parameters:
+  AllowedOrigins:
+    Type: CommaDelimitedList
+    Default: "localhost:3000,*.amplifyapp.com"
+    Description: Comma-separated list of allowed origins for CORS
+  
+  DailyRequestLimit:
+    Type: Number
+    Default: 10000
+    Description: Maximum API requests per day per user
+    
+  MaxConcurrentConnections:
+    Type: Number
+    Default: 10
+    Description: Maximum concurrent IoT connections per user
+
+  Environment:
+    Type: String
+    Default: "dev"
+    AllowedValues: ["dev", "staging", "prod"]
+    Description: Environment name
+
+Conditions:
+  EnableGrab: !Equals [!Ref "AWS::Region", "ap-southeast-1"]
+  EnablePinTranslate: !Equals [!Ref "AWS::Region", "us-east-1"]
+
+Resources:
+  ################ Cognito Identity Pool #######################
+
+  CognitoIdentityPool:
+    Type: "AWS::Cognito::IdentityPool"
+    Properties:
+      IdentityPoolName: !Sub "aws-iot-dashboard-${Environment}-identity-pool"
+      AllowUnauthenticatedIdentities: true
+      CognitoIdentityProviders: []
+
+  CognitoIdentityPoolRoleAttachment:
+    Type: "AWS::Cognito::IdentityPoolRoleAttachment"
+    Properties:
+      IdentityPoolId: !Ref CognitoIdentityPool
+      Roles:
+        unauthenticated: !GetAtt CognitoIdentityPoolUnauthRole.Arn
+
+  CognitoIdentityPoolUnauthRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: "sts:AssumeRoleWithWebIdentity"
+            Condition:
+              "StringEquals":
+                "cognito-identity.amazonaws.com:aud": !Ref CognitoIdentityPool
+              "ForAnyValue:StringLike":
+                "cognito-identity.amazonaws.com:amr": unauthenticated
+            Effect: Allow
+            Principal:
+              Federated: cognito-identity.amazonaws.com
+        Version: 2012-10-17
+
+  CognitoIdentityPoolUnauthRoleIamPolicy:
+    Type: "AWS::IAM::Policy"
+    Properties:
+      PolicyDocument:
+        Statement:
+          # Location Service Access
+          - Sid: "LocationServiceAccess"
+            Action:
+              - "geo:GetPlace"
+              - "geo:SearchPlaceIndex*"
+              - "geo:GetMap*"
+              - "geo:CalculateRoute"
+              - "geo:GetGeofence"
+              - "geo:ListGeofences"
+              - "geo:BatchEvaluateGeofences"
+              - "geo:CreateGeofenceCollection"
+              - "geo:CreateTracker"
+              - "geo:UpdateTracker"
+              - "geo:GetTracker"
+              - "geo:ListTrackers"
+            Effect: Allow
+            Resource: "*"
+            Condition:
+              DateGreaterThan:
+                "aws:TokenIssueTime": "2024-01-01T00:00:00Z"
+          
+          # IoT Core Access
+          - Sid: "IoTCoreAccess"
+            Action:
+              - "iot:Connect"
+              - "iot:Publish"
+              - "iot:Subscribe"
+              - "iot:Receive"
+              - "iot:GetThingShadow"
+              - "iot:UpdateThingShadow"
+            Effect: Allow
+            Resource:
+              - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:client/${!cognito-identity.amazonaws.com:sub}"
+              - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/${!cognito-identity.amazonaws.com:sub}/*"
+              - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topicfilter/${!cognito-identity.amazonaws.com:sub}/*"
+              - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:thing/${!cognito-identity.amazonaws.com:sub}"
+            Condition:
+              StringEquals:
+                "cognito-identity.amazonaws.com:sub": "${cognito-identity.amazonaws.com:sub}"
+          
+          # Pinpoint Analytics Access
+          - Sid: "PinpointAnalyticsAccess"
+            Action:
+              - "mobiletargeting:PutEvents"
+              - "mobiletargeting:UpdateEndpoint"
+              - "mobiletargeting:GetEndpoint"
+            Effect: Allow
+            Resource:
+              - !Sub "arn:aws:mobiletargeting:${AWS::Region}:${AWS::AccountId}:apps/${PinpointApplication}/*"
+            Condition:
+              NumericLessThan:
+                "aws:RequestedRegion": "1000"
+          
+          # DynamoDB Access
+          - Sid: "DynamoDBAccess"
+            Action:
+              - "dynamodb:GetItem"
+              - "dynamodb:PutItem"
+              - "dynamodb:UpdateItem"
+              - "dynamodb:DeleteItem"
+              - "dynamodb:Query"
+              - "dynamodb:Scan"
+            Effect: Allow
+            Resource:
+              - !GetAtt DynamoDBTable.Arn
+              - !Sub "${DynamoDBTable.Arn}/index/*"
+          
+          # Lambda Invoke Access
+          - Sid: "LambdaInvokeAccess"
+            Action:
+              - "lambda:InvokeFunction"
+            Effect: Allow
+            Resource:
+              - !GetAtt GeofenceProcessorFunction.Arn
+              - !GetAtt IoTPublisherFunction.Arn
+        Version: 2012-10-17
+      PolicyName: !Sub "CognitoIdentityPoolUnauthRoleIamPolicy-${AWS::StackName}"
+      Roles:
+        - !Ref CognitoIdentityPoolUnauthRole
+
+  ################ Amazon Location Service Resources #######################
+
+  # Map Resources
+  DemoMap:
+    Type: "AWS::Location::Map"
+    Properties:
+      MapName: !Sub "aws-iot-dashboard-${Environment}-map"
+      Description: "Demo map for AWS IoT Dashboard"
+      Configuration:
+        Style: "VectorEsriStreets"
+
+  # Place Index for Search
+  DemoPlaceIndex:
+    Type: "AWS::Location::PlaceIndex"
+    Properties:
+      IndexName: !Sub "aws-iot-dashboard-${Environment}-places"
+      Description: "Place index for search functionality"
+      DataSource: "Esri"
+
+  # Route Calculator
+  DemoRouteCalculator:
+    Type: "AWS::Location::RouteCalculator"
+    Properties:
+      CalculatorName: !Sub "aws-iot-dashboard-${Environment}-routes"
+      Description: "Route calculator for navigation"
+
+  # Geofence Collection
+  DemoGeofenceCollection:
+    Type: "AWS::Location::GeofenceCollection"
+    Properties:
+      CollectionName: !Sub "aws-iot-dashboard-${Environment}-geofences"
+      Description: "Geofence collection for location tracking"
+
+  # Tracker
+  DemoTracker:
+    Type: "AWS::Location::Tracker"
+    Properties:
+      TrackerName: !Sub "aws-iot-dashboard-${Environment}-tracker"
+      Description: "Location tracker for IoT devices"
+
+  ################ AWS IoT Core Resources #######################
+
+  IoTPolicy:
+    Type: "AWS::IoT::Policy"
+    Properties:
+      PolicyName: !Sub "aws-iot-dashboard-${Environment}-iot-policy"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - "iot:Connect"
+              - "iot:Publish"
+              - "iot:Subscribe"
+              - "iot:Receive"
+              - "iot:GetThingShadow"
+              - "iot:UpdateThingShadow"
+            Resource:
+              - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:client/${!cognito-identity.amazonaws.com:sub}"
+              - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/${!cognito-identity.amazonaws.com:sub}/*"
+              - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topicfilter/${!cognito-identity.amazonaws.com:sub}/*"
+              - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:thing/${!cognito-identity.amazonaws.com:sub}"
+
+  ################ Amazon Pinpoint Resources #######################
+
+  PinpointApplication:
+    Type: "AWS::Pinpoint::App"
+    Properties:
+      Name: !Sub "aws-iot-dashboard-${Environment}-analytics"
+
+  ################ DynamoDB Table #######################
+
+  DynamoDBTable:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      TableName: !Sub "aws-iot-dashboard-${Environment}-data"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: "PK"
+          AttributeType: "S"
+        - AttributeName: "SK"
+          AttributeType: "S"
+        - AttributeName: "GSI1PK"
+          AttributeType: "S"
+        - AttributeName: "GSI1SK"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "PK"
+          KeyType: "HASH"
+        - AttributeName: "SK"
+          KeyType: "RANGE"
+      GlobalSecondaryIndexes:
+        - IndexName: "GSI1"
+          KeySchema:
+            - AttributeName: "GSI1PK"
+              KeyType: "HASH"
+            - AttributeName: "GSI1SK"
+              KeyType: "RANGE"
+          Projection:
+            ProjectionType: "ALL"
+
+  ################ Lambda Functions #######################
+
+  GeofenceProcessorFunction:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      FunctionName: !Sub "aws-iot-dashboard-${Environment}-geofence-processor"
+      Runtime: nodejs20.x
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 30
+      Environment:
+        Variables:
+          IOT_ENDPOINT: !Sub "${AWS::AccountId}-ats.iot.${AWS::Region}.amazonaws.com"
+          DYNAMODB_TABLE: !Ref DynamoDBTable
+      Code:
+        ZipFile: |
+          exports.handler = async (event) => {
+            console.log('Geofence event:', JSON.stringify(event, null, 2));
+            return { statusCode: 200, body: 'OK' };
+          };
+
+  IoTPublisherFunction:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      FunctionName: !Sub "aws-iot-dashboard-${Environment}-iot-publisher"
+      Runtime: nodejs20.x
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 30
+      Environment:
+        Variables:
+          IOT_ENDPOINT: !Sub "${AWS::AccountId}-ats.iot.${AWS::Region}.amazonaws.com"
+      Code:
+        ZipFile: |
+          exports.handler = async (event) => {
+            console.log('IoT event:', JSON.stringify(event, null, 2));
+            return { statusCode: 200, body: 'OK' };
+          };
+
+  LambdaExecutionRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: LambdaCustomPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "iot:Publish"
+                  - "iot:Connect"
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - "dynamodb:GetItem"
+                  - "dynamodb:PutItem"
+                  - "dynamodb:UpdateItem"
+                  - "dynamodb:DeleteItem"
+                  - "dynamodb:Query"
+                  - "dynamodb:Scan"
+                Resource: !GetAtt DynamoDBTable.Arn
+
+  ################ CloudWatch Alarms #######################
+
+  LocationServiceUsageAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-LocationService-HighUsage"
+      AlarmDescription: "Alert when Location Service usage is high"
+      MetricName: RequestCount
+      Namespace: AWS/Location
+      Statistic: Sum
+      Period: 3600
+      EvaluationPeriods: 1
+      Threshold: !Ref DailyRequestLimit
+      ComparisonOperator: GreaterThanThreshold
+
+  IoTCoreUsageAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-IoTCore-HighUsage"
+      AlarmDescription: "Alert when IoT Core usage is high"
+      MetricName: PublishIn.Success
+      Namespace: AWS/IoT
+      Statistic: Sum
+      Period: 3600
+      EvaluationPeriods: 1
+      Threshold: 1000
+      ComparisonOperator: GreaterThanThreshold
+
+  ################ SNS Topic for Alerts #######################
+
+  SecurityAlertsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub "${AWS::StackName}-SecurityAlerts"
+      DisplayName: "Security Alerts for AWS IoT Dashboard"
+
+Outputs:
+  IdentityPoolId:
+    Description: "Cognito Identity Pool ID"
+    Value: !Ref CognitoIdentityPool
+    Export:
+      Name: !Sub "${AWS::StackName}-IdentityPoolId"
+
+  MapName:
+    Description: "Amazon Location Service Map Name"
+    Value: !Ref DemoMap
+    Export:
+      Name: !Sub "${AWS::StackName}-MapName"
+
+  PlaceIndexName:
+    Description: "Amazon Location Service Place Index Name"
+    Value: !Ref DemoPlaceIndex
+    Export:
+      Name: !Sub "${AWS::StackName}-PlaceIndexName"
+
+  RouteCalculatorName:
+    Description: "Amazon Location Service Route Calculator Name"
+    Value: !Ref DemoRouteCalculator
+    Export:
+      Name: !Sub "${AWS::StackName}-RouteCalculatorName"
+
+  GeofenceCollectionName:
+    Description: "Amazon Location Service Geofence Collection Name"
+    Value: !Ref DemoGeofenceCollection
+    Export:
+      Name: !Sub "${AWS::StackName}-GeofenceCollectionName"
+
+  TrackerName:
+    Description: "Amazon Location Service Tracker Name"
+    Value: !Ref DemoTracker
+    Export:
+      Name: !Sub "${AWS::StackName}-TrackerName"
+
+  IoTEndpoint:
+    Description: "AWS IoT Core Endpoint"
+    Value: !Sub "${AWS::AccountId}-ats.iot.${AWS::Region}.amazonaws.com"
+    Export:
+      Name: !Sub "${AWS::StackName}-IoTEndpoint"
+
+  PinpointApplicationId:
+    Description: "Amazon Pinpoint Application ID"
+    Value: !Ref PinpointApplication
+    Export:
+      Name: !Sub "${AWS::StackName}-PinpointApplicationId"
+
+  DynamoDBTableName:
+    Description: "DynamoDB Table Name"
+    Value: !Ref DynamoDBTable
+    Export:
+      Name: !Sub "${AWS::StackName}-DynamoDBTableName"
+
+  StackRegion:
+    Description: "AWS Region where the stack is deployed"
+    Value: !Ref AWS::Region
+    Export:
+      Name: !Sub "${AWS::StackName}-Region" 

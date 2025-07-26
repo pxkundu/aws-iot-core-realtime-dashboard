@@ -2945,6 +2945,12 @@
   "tracker_box__notification_service_status_2": {
     "text": "Notification socket is reconnecting"
   },
+  "show_toast__failed_refresh_credentials": {
+    "text": "Failed to refresh authentication credentials"
+  },
+  "show_toast__websocket_reconnect_failed": {
+    "text": "Failed to reconnect to notification service after multiple attempts"
+  },
   "map_buttons__info": {
     "text": "Changing data provider also affects Places & Routes API"
   },

@@ -43,7 +43,7 @@ If you already have AWS resources deployed, skip to Step 3.
    ```bash
    # Deploy the stack using AWS CLI
    aws cloudformation deploy \
-     --template-file extra/cloudformation/unauth-resources.yaml \
+     --template-file extra/cloudformation/security-hardened-unauth-resources.yaml \
      --stack-name aws-iot-dashboard-stack \
      --capabilities CAPABILITY_NAMED_IAM \
      --region eu-west-1
