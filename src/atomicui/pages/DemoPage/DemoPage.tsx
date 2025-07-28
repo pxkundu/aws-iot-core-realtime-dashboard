@@ -98,6 +98,31 @@ const UnauthSimulationExitModal = lazy(() =>
     default: module.ConfirmationModal
   }))
 );
+const IoTDevices = lazy(() =>
+  import("@demo/atomicui/organisms/IoTDevices").then(module => ({
+    default: module.IoTDevices
+  }))
+);
+const IoTGeofences = lazy(() =>
+  import("@demo/atomicui/organisms/IoTGeofences").then(module => ({
+    default: module.IoTGeofences
+  }))
+);
+const TrackerManagement = lazy(() =>
+  import("@demo/atomicui/organisms/TrackerManagement").then(module => ({
+    default: module.TrackerManagement
+  }))
+);
+const GeofenceManagement = lazy(() =>
+  import("@demo/atomicui/organisms/GeofenceManagement").then(module => ({
+    default: module.GeofenceManagement
+  }))
+);
+const DeviceManagement = lazy(() =>
+  import("@demo/atomicui/organisms/DeviceManagement").then(module => ({
+    default: module.DeviceManagement
+  }))
+);
 
 const {
   MAP_RESOURCES: { MAX_BOUNDS, SEARCH_ROUTE_BOUND_OPTIONS },
@@ -105,17 +130,23 @@ const {
   ROUTES: { DEMO }
 } = appConfig;
 const initShow: ShowStateType = {
-  sidebar: false,
-  routeBox: false,
-  settings: false,
-  stylesCard: false,
-  about: false,
-  unauthSimulation: false,
-  unauthSimulationBounds: false,
-  unauthSimulationExitModal: false,
-  openFeedbackModal: false,
-  openSignInModal: false
-};
+		sidebar: false,
+		routeBox: false,
+		settings: false,
+		stylesCard: false,
+		about: false,
+		unauthSimulation: false,
+		unauthSimulationBounds: false,
+		unauthSimulationExitModal: false,
+		openFeedbackModal: false,
+		openSignInModal: false,
+			// IoT Dashboard features
+	iotDevices: false,
+	iotGeofences: false,
+	trackerManagement: false,
+	geofenceManagement: false,
+	deviceManagement: false
+	};
 
 const DemoPage: FC = () => {
   useRecordViewPage("DemoPage");
@@ -311,26 +342,13 @@ const DemoPage: FC = () => {
 
   const handleLogoClick = () => window.open(AWS_LOCATION, "_self");
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleSignIn = async (email: string, password: string) => {
-    // TODO: Implement actual sign-in logic with AWS Cognito
-    console.log("Sign-in attempt for user:", email);
-    
-    // For now, simulate a successful sign-in
-    // In a real implementation, you would:
-    // 1. Call AWS Cognito authentication
-    // 2. Handle success/error responses
-    // 3. Store authentication tokens
-    // 4. Update user state
-    
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+  const handleSignIn = () => {
+    // SignInModal handles authentication internally
+    // This callback is called after successful sign-in
+    console.log("✅ User signed in successfully");
     
     // Close the modal on success
     setShow(s => ({ ...s, openSignInModal: false }));
-    
-    // You can add success notification here
-    // For example: showToast("Successfully signed in!");
   };
 
   return mapStyleWithLanguageUrl ? (
@@ -382,6 +400,9 @@ const DemoPage: FC = () => {
                   onShowAboutModal={() => setShow(s => ({ ...s, about: true }))}
                   onShowUnauthSimulation={() => setShow(s => ({ ...s, unauthSimulation: true }))}
                   onOpenSignInModal={() => setShow(s => ({ ...s, openSignInModal: true }))}
+                  onShowIoTDevices={() => setShow(s => ({ ...s, deviceManagement: true }))}
+                  onShowIoTGeofences={() => setShow(s => ({ ...s, geofenceManagement: true }))}
+                  onShowTrackerManagement={() => setShow(s => ({ ...s, trackerManagement: true }))}
                 />
               )}
               {show.routeBox ? (
@@ -446,6 +467,10 @@ const DemoPage: FC = () => {
               setExpandRouteOptionsMobile={setExpandRouteOptionsMobile}
               setSearchBoxValue={setSearchBoxValue}
               onOpenFeedbackModal={() => setShow(s => ({ ...s, openFeedbackModal: true }))}
+              onOpenSignInModal={() => setShow(s => ({ ...s, openSignInModal: true }))}
+              onShowIoTDevices={() => setShow(s => ({ ...s, deviceManagement: true }))}
+              onShowIoTGeofences={() => setShow(s => ({ ...s, geofenceManagement: true }))}
+              onShowTrackerManagement={() => setShow(s => ({ ...s, trackerManagement: true }))}
               geolocateControlRef={geolocateControlRef}
               setShowUnauthSimulationBounds={b => setShow(s => ({ ...s, unauthSimulationBounds: b }))}
             />
@@ -484,6 +509,33 @@ const DemoPage: FC = () => {
         onClose={() => setShow(s => ({ ...s, openSignInModal: false }))} 
         onSignIn={handleSignIn}
       />
+      
+      {/* IoT Management UIs */}
+      {show.iotDevices && (
+        <IoTDevices onClose={() => setShow(s => ({ ...s, iotDevices: false }))} />
+      )}
+      {show.iotGeofences && (
+        <IoTGeofences onClose={() => setShow(s => ({ ...s, iotGeofences: false }))} />
+      )}
+      {show.trackerManagement && (
+        <TrackerManagement 
+          onClose={() => setShow(s => ({ ...s, trackerManagement: false }))} 
+          onOpenSignInModal={() => setShow(s => ({ ...s, openSignInModal: true }))}
+        />
+      )}
+      {show.geofenceManagement && (
+        <GeofenceManagement 
+          onClose={() => setShow(s => ({ ...s, geofenceManagement: false }))} 
+          onOpenSignInModal={() => setShow(s => ({ ...s, openSignInModal: true }))}
+        />
+      )}
+      {show.deviceManagement && (
+        <DeviceManagement 
+          onClose={() => setShow(s => ({ ...s, deviceManagement: false }))} 
+          onOpenSignInModal={() => setShow(s => ({ ...s, openSignInModal: true }))}
+        />
+      )}
+      
       <SettingsModal
         open={show.settings}
         onClose={() => {

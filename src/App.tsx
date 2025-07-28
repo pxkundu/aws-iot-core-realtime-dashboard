@@ -12,6 +12,9 @@ import { appConfig } from "@demo/core/constants";
 import { initializeSecurity } from "@demo/utils/securityValidation";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 
+// Import Amplify configuration
+import "./amplify-config";
+
 const {
 	PERSIST_STORAGE_KEYS: { LOCAL_APP_VERSION },
 	ENV: { APP_VERSION }

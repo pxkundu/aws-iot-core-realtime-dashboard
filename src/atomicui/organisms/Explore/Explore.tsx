@@ -13,6 +13,7 @@ import {
   IconDeveloperResources,
   IconDirections,
   IconFaqsPrimary,
+  IconFeedback,
   IconFinancialService,
   IconGeofencesTrackers,
   IconGlobe,
@@ -23,8 +24,10 @@ import {
   IconRadar,
   IconRetail,
   IconRoute,
+  IconSettings,
   IconTravelHospitality,
-  IconTruckSolid
+  IconTruckSolid,
+  IconUser
 } from "@demo/assets/svgs";
 import { appConfig } from "@demo/core/constants";
 import BottomSheetHeights from "@demo/core/constants/bottomSheetHeights";
@@ -89,9 +92,13 @@ interface ExploreProps {
   updateUIInfo: (ui: ResponsiveUIEnum) => void;
   onCloseSidebar: () => void;
   onOpenFeedbackModal: () => void;
+  onOpenSignInModal: () => void;
   onShowSettings: () => void;
   onShowAboutModal: () => void;
   onShowUnauthSimulation: () => void;
+  onShowIoTDevices?: () => void;
+  onShowIoTGeofences?: () => void;
+  onShowTrackerManagement?: () => void;
   bottomSheetRef?: MutableRefObject<RefHandles | null>;
 }
 
@@ -99,9 +106,13 @@ const Explore: FC<ExploreProps> = ({
   updateUIInfo,
   onCloseSidebar,
   onOpenFeedbackModal,
+  onOpenSignInModal,
   onShowSettings,
   onShowAboutModal,
   onShowUnauthSimulation,
+  onShowIoTDevices,
+  onShowIoTGeofences,
+  onShowTrackerManagement,
   bottomSheetRef
 }) => {
   const [isMenuExpanded, setIsMenuExpanded] = useState<{ [key: string]: boolean }>({
@@ -138,6 +149,26 @@ const Explore: FC<ExploreProps> = ({
     onCloseSidebar();
     onOpenFeedbackModal();
   }, [onCloseSidebar, onOpenFeedbackModal]);
+
+  const onClickSignIn = useCallback(() => {
+    onCloseSidebar();
+    onOpenSignInModal();
+  }, [onCloseSidebar, onOpenSignInModal]);
+
+  const onClickIoTDevices = useCallback(() => {
+    onCloseSidebar();
+    onShowIoTDevices?.();
+  }, [onCloseSidebar, onShowIoTDevices]);
+
+  const onClickIoTGeofences = useCallback(() => {
+    onCloseSidebar();
+    onShowIoTGeofences?.();
+  }, [onCloseSidebar, onShowIoTGeofences]);
+
+  const onClickTrackerManagement = useCallback(() => {
+    onCloseSidebar();
+    onShowTrackerManagement?.();
+  }, [onCloseSidebar, onShowTrackerManagement]);
 
   const exploreMoreOptions = useMemo(
     () =>
@@ -623,7 +654,7 @@ const Explore: FC<ExploreProps> = ({
               ]
             }
           ],
-    [navigate, onClickFeedback, onClickMore, onClickSettings]
+    [navigate, onClickFeedback, onClickMore, onClickSettings, onClickSignIn]
   );
 
   const renderExploreMoreOptions = useMemo(() => {
@@ -750,6 +781,58 @@ const Explore: FC<ExploreProps> = ({
 
           onClickUnauthSimulation();
         }
+      },
+      {
+        text: t("fm__sign_in_btn.text"),
+        description: t("Sign in to access additional features"),
+        onClickHandler: onClickSignIn,
+        isEnabled: true,
+        iconComponent: (
+          <IconSettings
+            style={{ alignSelf: "flex-start", margin: "0.15rem 0rem 0rem 0.8rem" }}
+            width={18}
+            height={18}
+          />
+        )
+      },
+      {
+        text: "IoT Devices",
+        description: "Manage your IoT devices and tracking",
+        onClickHandler: onClickIoTDevices,
+        isEnabled: true,
+        iconComponent: (
+          <IconRadar
+            style={{ alignSelf: "flex-start", margin: "0.15rem 0rem 0rem 0.8rem" }}
+            width={18}
+            height={18}
+          />
+        )
+      },
+      {
+        text: "Geofences",
+        description: "Create and manage geofences",
+        onClickHandler: onClickIoTGeofences,
+        isEnabled: true,
+        iconComponent: (
+          <IconGeofencesTrackers
+            style={{ alignSelf: "flex-start", margin: "0.15rem 0rem 0rem 0.8rem" }}
+            width={18}
+            height={18}
+          />
+        )
+      },
+      {
+        text: "Tracker Management",
+        description: "Manage location trackers",
+        onClickHandler: onClickTrackerManagement,
+        isEnabled: true,
+        iconComponent: (
+          <IconMapSolid
+            style={{ alignSelf: "flex-start", margin: "0.15rem 0rem 0rem 0.8rem" }}
+            width={18}
+            height={18}
+          />
+        )
       }
     ],
     [
@@ -760,7 +843,11 @@ const Explore: FC<ExploreProps> = ({
       setBottomSheetHeight,
       setBottomSheetMinHeight,
       t,
-      updateUIInfo
+      updateUIInfo,
+      onClickSignIn,
+      onClickIoTDevices,
+      onClickIoTGeofences,
+      onClickTrackerManagement
     ]
   );
 

@@ -83,6 +83,11 @@ const validateAndSetAnalyticsCreds = async (forceRefreshCreds = false) => {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sendEvent = async (command: any, shouldRetryAfterFailure = true) => {
 	try {
+		// Skip Pinpoint analytics to avoid CSP errors
+		if (!PINPOINT_APPLICATION_ID || PINPOINT_APPLICATION_ID === 'undefined') {
+			console.log('Pinpoint analytics disabled - skipping event');
+			return;
+		}
 		await validateAndSetAnalyticsCreds();
 		await pinClient.send(command);
 	} catch (error) {

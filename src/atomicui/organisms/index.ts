@@ -1,11 +1,14 @@
 /* Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved. */
 /* SPDX-License-Identifier: MIT-0 */
 
-export * from "./AboutModal";
-export * from "./SearchBox";
-export * from "./Sidebar";
-export * from "./RouteBox";
-export * from "./SettingsModal";
-export * from "./UnauthSimulation";
-export * from "./ResponsiveBottomSheet";
-export * from "./Explore";
+export { AboutModal } from "./AboutModal";
+export { Explore } from "./Explore";
+export { ResponsiveBottomSheet } from "./ResponsiveBottomSheet";
+export { RouteBox } from "./RouteBox";
+export { SearchBox } from "./SearchBox";
+export { SettingsModal } from "./SettingsModal";
+export { Sidebar } from "./Sidebar";
+export { UnauthSimulation } from "./UnauthSimulation";
+export { TrackerManagement } from "./TrackerManagement";
+export { IoTDevices } from "./IoTDevices";
+export { IoTGeofences } from "./IoTGeofences";

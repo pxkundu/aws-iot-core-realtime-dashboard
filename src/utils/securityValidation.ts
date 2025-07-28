@@ -11,8 +11,8 @@ interface SecurityConfig {
  * Security configuration - can be toggled via environment variables
  */
 const getSecurityConfig = (): SecurityConfig => ({
-  maxEndpointExposure: process.env.NODE_ENV === 'production',
-  validateOrigin: process.env.NODE_ENV === 'production',
+  maxEndpointExposure: import.meta.env.MODE === 'production',
+validateOrigin: import.meta.env.MODE === 'production',
   enableRateLimit: true, // Always enabled for monitoring
   logSecurityEvents: true
 });

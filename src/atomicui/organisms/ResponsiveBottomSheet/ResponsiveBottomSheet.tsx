@@ -12,7 +12,8 @@ import {
 	useEffect,
 	useMemo,
 	useRef,
-	useState
+	useState,
+	ReactNode
 } from "react";
 
 import { Flex, Loader, Text } from "@aws-amplify/ui-react";
@@ -44,18 +45,22 @@ const {
 } = appConfig;
 
 interface IProps {
-	mapRef: MutableRefObject<MapRef | null>;
+	mapRef?: MutableRefObject<MapRef | null>;
 	geolocateControlRef: MutableRefObject<GeolocateControlRef | null>;
-	SearchBoxEl: (ref?: MutableRefObject<RefHandles | null>) => JSX.Element;
-	MapButtons: (ref?: MutableRefObject<RefHandles | null>) => JSX.Element;
-	RouteBox: (ref?: MutableRefObject<RefHandles | null>) => JSX.Element;
+	SearchBoxEl: (ref?: MutableRefObject<RefHandles | null>) => ReactNode;
+	MapButtons: (ref?: MutableRefObject<RefHandles | null>) => ReactNode;
+	RouteBox: (ref?: MutableRefObject<RefHandles | null>) => ReactNode;
 	onCloseSidebar: () => void;
 	onOpenFeedbackModal: () => void;
+	onOpenSignInModal: () => void;
 	onShowSettings: () => void;
 	onShowAboutModal: () => void;
 	onShowUnauthSimulation: () => void;
+	onShowIoTDevices?: () => void;
+	onShowIoTGeofences?: () => void;
+	onShowTrackerManagement?: () => void;
 	setShowUnauthSimulation: (b: boolean) => void;
-	handleLogoClick: () => Window | null;
+	handleLogoClick: () => void;
 	setShow: Dispatch<SetStateAction<ShowStateType>>;
 	startSimulation: boolean;
 	setStartSimulation: Dispatch<SetStateAction<boolean>>;
@@ -65,7 +70,7 @@ interface IProps {
 	setConfirmCloseSimulation: Dispatch<SetStateAction<boolean>>;
 	setShowRouteBox: (b: boolean) => void;
 	isExpandRouteOptionsMobile: boolean;
-	setExpandRouteOptionsMobile: (b: boolean) => void;
+	setExpandRouteOptionsMobile: Dispatch<SetStateAction<boolean>>;
 	setSearchBoxValue: Dispatch<SetStateAction<string>>;
 	setShowUnauthSimulationBounds: (b: boolean) => void;
 }
@@ -78,9 +83,13 @@ const ResponsiveBottomSheet: FC<IProps> = ({
 	RouteBox,
 	onCloseSidebar,
 	onOpenFeedbackModal,
+	onOpenSignInModal,
 	onShowSettings,
 	onShowAboutModal,
 	onShowUnauthSimulation,
+	onShowIoTDevices,
+	onShowIoTGeofences,
+	onShowTrackerManagement,
 	setShowUnauthSimulation,
 	handleLogoClick,
 	setShow,
@@ -383,9 +392,13 @@ const ResponsiveBottomSheet: FC<IProps> = ({
 									updateUIInfo={setUI}
 									onCloseSidebar={onCloseSidebar}
 									onOpenFeedbackModal={onOpenFeedbackModal}
+									onOpenSignInModal={onOpenSignInModal}
 									onShowSettings={onShowSettings}
 									onShowAboutModal={onShowAboutModal}
 									onShowUnauthSimulation={onShowUnauthSimulation}
+									onShowIoTDevices={onShowIoTDevices}
+									onShowIoTGeofences={onShowIoTGeofences}
+									onShowTrackerManagement={onShowTrackerManagement}
 									bottomSheetRef={bottomSheetRef}
 								/>
 							)}
@@ -400,9 +413,13 @@ const ResponsiveBottomSheet: FC<IProps> = ({
 			UnauthSimulationUI,
 			onCloseSidebar,
 			onOpenFeedbackModal,
+			onOpenSignInModal,
 			onShowAboutModal,
 			onShowSettings,
 			onShowUnauthSimulation,
+			onShowIoTDevices,
+			onShowIoTGeofences,
+			onShowTrackerManagement,
 			setUI
 		]
 	);

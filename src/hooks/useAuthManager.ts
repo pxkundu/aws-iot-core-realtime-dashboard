@@ -1,151 +1,95 @@
 /* Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved. */
 /* SPDX-License-Identifier: MIT-0 */
 
-import { useEffect, useState } from 'react';
-import { getCurrentUser, signOut, fetchAuthSession, AuthUser } from 'aws-amplify/auth';
-import { Hub } from 'aws-amplify/utils';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { getCurrentUser, signOut } from "aws-amplify/auth";
+import { Hub } from "aws-amplify/utils";
+import type { AuthUser } from "aws-amplify/auth";
 
-export interface AuthState {
-	user: AuthUser | null;
-	isAuthenticated: boolean;
-	isLoading: boolean;
-	error: string | null;
-}
+/**
+ * Authentication manager following Amplify Gen 2 patterns
+ * @see https://docs.amplify.aws/gen2/build-a-backend/auth/connect-your-frontend/
+ */
+const useAuthManager = () => {
+	const [user, setUser] = useState<AuthUser | undefined>();
+	const [isUserSignedIn, setIsUserSignedIn] = useState<boolean>(false);
+	const [isLoading, setIsLoading] = useState<boolean>(true);
 
-export interface AuthContextType extends AuthState {
-	signOut: () => Promise<void>;
-	clearError: () => void;
-	refreshAuth: () => Promise<void>;
-}
-
-const useAuthManager = (): AuthContextType => {
-	const [authState, setAuthState] = useState<AuthState>({
-		user: null,
-		isAuthenticated: false,
-		isLoading: false, // Start with false so app loads immediately
-		error: null,
-	});
-
-	const clearError = () => {
-		setAuthState(prev => ({ ...prev, error: null }));
-	};
-
-	const checkAuthState = async () => {
+	const checkAuthState = useCallback(async () => {
 		try {
-			// Don't set loading state - check auth silently in background
-			
-			// Get current user
-			const user = await getCurrentUser();
-			
-			// Verify session is valid
-			const session = await fetchAuthSession();
-			
-			if (user && session.tokens) {
-				console.log('✅ User authenticated:', user.username);
-				setAuthState(prev => ({
-					...prev,
-					user,
-					isAuthenticated: true,
-					error: null,
-				}));
-			} else {
-				console.log('ℹ️ No user session found');
-				setAuthState(prev => ({
-					...prev,
-					user: null,
-					isAuthenticated: false,
-					error: null,
-				}));
-			}
+			setIsLoading(true);
+			const currentUser = await getCurrentUser();
+			setUser(currentUser);
+			setIsUserSignedIn(true);
+			console.log("✅ User is authenticated:", currentUser.username);
 		} catch (error) {
-			// This is expected when no user is signed in - not an error condition
-			if (error instanceof Error && error.name === 'UserUnAuthenticatedException') {
-				console.log('ℹ️ No authenticated user found (this is normal for new visitors)');
-			} else {
-				console.log('⚠️ Authentication check failed:', error);
-			}
-			setAuthState(prev => ({
-				...prev,
-				user: null,
-				isAuthenticated: false,
-				error: null, // Don't treat "not authenticated" as an error
-			}));
+			// User is not authenticated - this is normal
+			setUser(undefined);
+			setIsUserSignedIn(false);
+			console.log("ℹ️ User not authenticated");
+		} finally {
+			setIsLoading(false);
 		}
-	};
+	}, []);
 
-	const handleSignOut = async () => {
+	const handleSignOut = useCallback(async () => {
 		try {
 			await signOut();
-			setAuthState(prev => ({
-				...prev,
-				user: null,
-				isAuthenticated: false,
-				error: null,
-			}));
+			setUser(undefined);
+			setIsUserSignedIn(false);
+			console.log("✅ User signed out successfully");
 		} catch (error) {
-			console.error('Sign out error:', error);
-			setAuthState(prev => ({
-				...prev,
-				error: error instanceof Error ? error.message : 'Sign out failed',
-			}));
+			console.error("❌ Sign out error:", error);
 		}
-	};
-
-	const refreshAuth = async () => {
-		await checkAuthState();
-	};
+	}, []);
 
 	useEffect(() => {
-		// Check auth state on mount
 		checkAuthState();
 
 		// Listen to auth events
-		const hubListener = (data: { payload: { event: string } }) => {
-			const { event } = data.payload;
-			
-			switch (event) {
-				case 'signedIn':
-					console.log('User signed in');
+		const unsubscribe = Hub.listen("auth", ({ payload }) => {
+			switch (payload.event) {
+				case "signedIn":
+					console.log("🔑 Auth: User signed in");
 					checkAuthState();
 					break;
-				case 'signedOut':
-					console.log('User signed out');
-					setAuthState(prev => ({
-						...prev,
-						user: null,
-						isAuthenticated: false,
-						error: null,
-					}));
+				case "signedOut":
+					console.log("🔑 Auth: User signed out");
+					setUser(undefined);
+					setIsUserSignedIn(false);
+					setIsLoading(false);
 					break;
-				case 'tokenRefresh':
-					console.log('Token refreshed');
-					checkAuthState();
+				case "tokenRefresh":
+					console.log("🔄 Auth: Token refreshed");
 					break;
-				case 'signInFailure':
-					console.log('Sign in failure');
-					setAuthState(prev => ({
-						...prev,
-						error: 'Sign in failed',
-					}));
+				case "tokenRefresh_failure":
+					console.log("❌ Auth: Token refresh failed");
 					break;
 				default:
 					break;
 			}
-		};
+		});
 
-		const unsubscribe = Hub.listen('auth', hubListener);
+		return unsubscribe;
+	}, [checkAuthState]);
 
-		return () => {
-			unsubscribe();
-		};
-	}, []);
+	const methods = useMemo(
+		() => ({
+			checkAuthState,
+			signOut: handleSignOut
+		}),
+		[checkAuthState, handleSignOut]
+	);
 
-	return {
-		...authState,
-		signOut: handleSignOut,
-		clearError,
-		refreshAuth,
-	};
+	return useMemo(
+		() => ({
+			user,
+			isUserSignedIn,
+			isLoading,
+			...methods
+		}),
+		[user, isUserSignedIn, isLoading, methods]
+	);
 };
 
 export default useAuthManager;

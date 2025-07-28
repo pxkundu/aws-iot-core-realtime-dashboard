@@ -4,9 +4,9 @@
 import { FC, lazy } from "react";
 
 import { Button, Card, Flex, Text, View, Divider } from "@aws-amplify/ui-react";
-import { IconClose, IconCompass, IconGear, IconInfo, IconRadar } from "@demo/assets/svgs";
+import { IconClose, IconCompass, IconGear, IconInfo, IconRadar, IconGeofence } from "@demo/assets/svgs";
 import { appConfig } from "@demo/core/constants";
-import { useAuth } from "@demo/core/AuthProvider";
+import { useAuthContext } from "@demo/core/AuthProvider";
 import { useUnauthSimulation } from "@demo/hooks";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -24,6 +24,9 @@ export interface SidebarProps {
 	onShowAboutModal: () => void;
 	onShowUnauthSimulation: () => void;
 	onOpenSignInModal: () => void;
+	onShowIoTDevices?: () => void;
+	onShowIoTGeofences?: () => void;
+	onShowTrackerManagement?: () => void;
 }
 
 const Sidebar: FC<SidebarProps> = ({
@@ -31,11 +34,14 @@ const Sidebar: FC<SidebarProps> = ({
 	onShowSettings,
 	onShowAboutModal,
 	onShowUnauthSimulation,
-	onOpenSignInModal
+	onOpenSignInModal,
+	onShowIoTDevices,
+	onShowIoTGeofences,
+	onShowTrackerManagement
 }) => {
 	const navigate = useNavigate();
 	const { t } = useTranslation();
-	const { user, isAuthenticated, signOut } = useAuth();
+	const { user, isUserSignedIn, signOut } = useAuthContext();
 	const { setHideGeofenceTrackerShortcut } = useUnauthSimulation();
 
 	const onClickSignInButton = () => {
@@ -68,6 +74,21 @@ const Sidebar: FC<SidebarProps> = ({
 		onShowAboutModal();
 	};
 
+	const onClickIoTDevices = () => {
+		onCloseSidebar();
+		onShowIoTDevices?.();
+	};
+
+	const onClickIoTGeofences = () => {
+		onCloseSidebar();
+		onShowIoTGeofences?.();
+	};
+
+	const onClickTrackerManagement = () => {
+		onCloseSidebar();
+		onShowTrackerManagement?.();
+	};
+
 	return (
 		<Card data-testid="side-bar" className="side-bar">
 			<Flex className="title-bar">
@@ -95,9 +116,17 @@ const Sidebar: FC<SidebarProps> = ({
 					<IconCompass className="menu-icon" />
 					<Text>{t("navigate.text")}</Text>
 				</Flex>
-				<Flex className="link-item" onClick={() => onClickUnauthSimulation()}>
+				<Flex className="link-item" onClick={onClickTrackerManagement}>
 					<IconRadar className="menu-icon" />
 					<Text>{t("trackers.text")}</Text>
+				</Flex>
+				<Flex className="link-item" onClick={onClickIoTDevices}>
+					<IconRadar className="menu-icon" />
+					<Text>Devices</Text>
+				</Flex>
+				<Flex className="link-item" onClick={onClickIoTGeofences}>
+					<IconGeofence className="menu-icon" />
+					<Text>Geofences</Text>
 				</Flex>
 				<Flex className="link-item" onClick={onClickSettings}>
 					<IconGear className="menu-icon" />
@@ -125,7 +154,7 @@ const Sidebar: FC<SidebarProps> = ({
 					{t("fm__provide_feedback_btn.text")}
 				</Button>
 			</View> */}
-			{isAuthenticated && user ? (
+			{isUserSignedIn && user ? (
 				<>
 					<Divider margin="1rem 0" />
 					<Flex direction="column" className="user-info-section" padding="0 1.25rem">
