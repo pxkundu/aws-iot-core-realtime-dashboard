@@ -10,5 +10,7 @@ export { SettingsModal } from "./SettingsModal";
 export { Sidebar } from "./Sidebar";
 export { UnauthSimulation } from "./UnauthSimulation";
 export { TrackerManagement } from "./TrackerManagement";
+export { DeviceManagement } from "./DeviceManagement";
+export { GeofenceManagement } from "./GeofenceManagement";
 export { IoTDevices } from "./IoTDevices";
 export { IoTGeofences } from "./IoTGeofences";

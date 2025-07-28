@@ -24,7 +24,7 @@ import {
   IconRadar,
   IconRetail,
   IconRoute,
-  IconSettings,
+  
   IconTravelHospitality,
   IconTruckSolid,
   IconUser
@@ -788,7 +788,7 @@ const Explore: FC<ExploreProps> = ({
         onClickHandler: onClickSignIn,
         isEnabled: true,
         iconComponent: (
-          <IconSettings
+          <IconGear
             style={{ alignSelf: "flex-start", margin: "0.15rem 0rem 0rem 0.8rem" }}
             width={18}
             height={18}

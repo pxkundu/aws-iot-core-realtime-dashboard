@@ -55,6 +55,7 @@ export default defineConfig(({ command }) => {
 				outDir: "./dist",
 				sourcemap: false,
 				minify: true,
+				target: "es2022",
 				rollupOptions: {
 					output: {
 						assetFileNames: (assetInfo) => {

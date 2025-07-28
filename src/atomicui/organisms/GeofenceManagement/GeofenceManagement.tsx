@@ -33,7 +33,7 @@ interface GeofenceManagementProps {
 type GeofenceType = Schema['Geofence']['type'];
 
 const GeofenceManagement: FC<GeofenceManagementProps> = ({ onClose, onOpenSignInModal }) => {
-  const { user, isUserSignedIn } = useAuthContext();
+  const { isUserSignedIn } = useAuthContext();
   const [geofences, setGeofences] = useState<GeofenceType[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -247,16 +247,7 @@ const GeofenceManagement: FC<GeofenceManagementProps> = ({ onClose, onOpenSignIn
     return <Badge variation={variation}>{text}</Badge>;
   };
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
+
 
   const getGeometryType = (geometry: string) => {
     try {

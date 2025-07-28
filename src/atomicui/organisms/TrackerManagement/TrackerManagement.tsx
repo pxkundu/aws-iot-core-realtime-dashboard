@@ -33,7 +33,7 @@ interface TrackerManagementProps {
 type TrackerType = Schema['Tracker']['type'];
 
 const TrackerManagement: FC<TrackerManagementProps> = ({ onClose, onOpenSignInModal }) => {
-  const { user, isUserSignedIn } = useAuthContext();
+  const { isUserSignedIn } = useAuthContext();
   const [trackers, setTrackers] = useState<TrackerType[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");

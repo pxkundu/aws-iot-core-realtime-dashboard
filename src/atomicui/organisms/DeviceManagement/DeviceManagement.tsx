@@ -33,7 +33,7 @@ type DeviceType = Schema['Device']['type'];
 type TrackerType = Schema['Tracker']['type'];
 
 const DeviceManagement: FC<DeviceManagementProps> = ({ onClose, onOpenSignInModal }) => {
-  const { user, isUserSignedIn } = useAuthContext();
+  const { isUserSignedIn } = useAuthContext();
   const [devices, setDevices] = useState<DeviceType[]>([]);
   const [trackers, setTrackers] = useState<TrackerType[]>([]);
   const [loading, setLoading] = useState(false);
